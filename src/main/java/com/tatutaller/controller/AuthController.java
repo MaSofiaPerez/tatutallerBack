@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 
-@CrossOrigin(origins = "*", maxAge = 3600)
+@CrossOrigin(origins = "*", maxAge = 3600, allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS})
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -26,12 +26,22 @@ public class AuthController {
     
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
+        System.out.println("=== RECIBIDA PETICIÓN POST LOGIN ===");
+        System.out.println("Email recibido: '" + loginRequest.getEmail() + "'");
+        System.out.println("Password recibido: '" + loginRequest.getPassword() + "'");
+        System.out.println("=======================================");
+        
         try {
+            System.out.println("Intento de login para email: " + loginRequest.getEmail());
             JwtResponse jwtResponse = authService.authenticateUser(loginRequest);
+            System.out.println("Login exitoso para: " + loginRequest.getEmail());
             return ResponseEntity.ok(jwtResponse);
         } catch (Exception e) {
+            System.err.println("Error en login para " + loginRequest.getEmail() + ": " + e.getMessage());
+            e.printStackTrace();
             Map<String, String> error = new HashMap<>();
             error.put("message", "Credenciales inválidas");
+            error.put("details", e.getMessage());
             return ResponseEntity.badRequest().body(error);
         }
     }
@@ -57,6 +67,16 @@ public class AuthController {
             Map<String, String> error = new HashMap<>();
             error.put("message", e.getMessage());
             return ResponseEntity.badRequest().body(error);
+        }
+    }
+    
+    // Endpoint temporal para debugging
+    @GetMapping("/debug/users")
+    public ResponseEntity<?> debugUsers() {
+        try {
+            return ResponseEntity.ok(authService.getAllUsersForDebug());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
     }
 }

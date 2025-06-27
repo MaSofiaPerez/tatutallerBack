@@ -59,4 +59,23 @@ public class AuthService {
         
         return userRepository.save(user);
     }
+    
+    // Método temporal para debugging
+    public java.util.List<java.util.Map<String, Object>> getAllUsersForDebug() {
+        java.util.List<User> users = userRepository.findAll();
+        java.util.List<java.util.Map<String, Object>> result = new java.util.ArrayList<>();
+        
+        for (User user : users) {
+            java.util.Map<String, Object> userInfo = new java.util.HashMap<>();
+            userInfo.put("id", user.getId());
+            userInfo.put("name", user.getName());
+            userInfo.put("email", user.getEmail());
+            userInfo.put("role", user.getRole());
+            userInfo.put("status", user.getStatus());
+            userInfo.put("passwordStartsWith", user.getPassword().substring(0, Math.min(10, user.getPassword().length())));
+            result.add(userInfo);
+        }
+        
+        return result;
+    }
 }
