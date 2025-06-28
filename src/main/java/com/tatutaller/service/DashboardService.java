@@ -13,19 +13,19 @@ import java.util.List;
 
 @Service
 public class DashboardService {
-    
+
     @Autowired
     private UserRepository userRepository;
-    
+
     @Autowired
     private BookingRepository bookingRepository;
-    
+
     @Autowired
     private ClassRepository classRepository;
-    
+
     @Autowired
     private ProductRepository productRepository;
-    
+
     public DashboardStatsResponse getDashboardStats() {
         long totalUsers = userRepository.countUsers();
         long totalBookings = bookingRepository.countTotalBookings();
@@ -34,14 +34,15 @@ public class DashboardService {
         long totalClasses = classRepository.countActiveClasses();
         long confirmedBookings = bookingRepository.countConfirmedBookings();
         long activeProducts = productRepository.countActiveProducts();
-        
-        DashboardStatsResponse response = new DashboardStatsResponse(totalUsers, totalBookings, totalRevenue, totalClasses);
+
+        DashboardStatsResponse response = new DashboardStatsResponse(totalUsers, totalBookings, totalRevenue,
+                totalClasses);
         response.setConfirmedBookings(confirmedBookings);
         response.setActiveProducts(activeProducts);
-        
+
         return response;
     }
-    
+
     public List<Booking> getRecentBookings() {
         return bookingRepository.findRecentBookings();
     }

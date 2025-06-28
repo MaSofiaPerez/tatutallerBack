@@ -54,7 +54,8 @@ public class Product {
     }
 
     // Constructors
-    public Product() {}
+    public Product() {
+    }
 
     public Product(String name, String description, BigDecimal price, Integer stock) {
         this.name = name;

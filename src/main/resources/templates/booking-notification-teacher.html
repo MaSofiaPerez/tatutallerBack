@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nueva Reserva - TatuTaller</title>
-    <style>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Nueva Reserva - TatuTaller</title>
+        <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
@@ -77,54 +77,61 @@
             font-size: 14px;
         }
     </style>
-</head>
-<body>
-    <div class="email-container">
-        <div class="header">
-            <div class="logo">🏺 TatuTaller</div>
-            <p>Taller de Cerámica Artesanal</p>
-        </div>
-        
-        <div class="content">
-            <h2>Nueva Reserva Recibida</h2>
-            
-            <p>Hola <strong th:text="${teacherName}">Profesor</strong>,</p>
-            
-            <p>Has recibido una nueva reserva para una de tus clases. Por favor revisa los detalles:</p>
-            
-            <div class="booking-details">
-                <h3>📋 Detalles de la Reserva</h3>
-                <div class="detail-item">
-                    <span class="detail-label">Estudiante:</span>
-                    <span class="detail-value" th:text="${studentName}">Nombre del Estudiante</span>
+    </head>
+    <body>
+        <div class="email-container">
+            <div class="header">
+                <div class="logo">🏺 TatuTaller</div>
+                <p>Taller de Cerámica Artesanal</p>
+            </div>
+
+            <div class="content">
+                <h2>Nueva Reserva Recibida</h2>
+
+                <p>Hola <strong th:text="${teacherName}">Profesor</strong>,</p>
+
+                <p>Has recibido una nueva reserva para una de tus clases. Por
+                    favor revisa los detalles:</p>
+
+                <div class="booking-details">
+                    <h3>📋 Detalles de la Reserva</h3>
+                    <div class="detail-item">
+                        <span class="detail-label">Estudiante:</span>
+                        <span class="detail-value"
+                            th:text="${studentName}">Nombre del
+                            Estudiante</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Clase:</span>
+                        <span class="detail-value" th:text="${className}">Nombre
+                            de la Clase</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Fecha:</span>
+                        <span class="detail-value"
+                            th:text="${bookingDate}">Fecha</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Hora:</span>
+                        <span class="detail-value"
+                            th:text="${bookingTime}">Hora</span>
+                    </div>
                 </div>
-                <div class="detail-item">
-                    <span class="detail-label">Clase:</span>
-                    <span class="detail-value" th:text="${className}">Nombre de la Clase</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Fecha:</span>
-                    <span class="detail-value" th:text="${bookingDate}">Fecha</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Hora:</span>
-                    <span class="detail-value" th:text="${bookingTime}">Hora</span>
+
+                <p>Por favor, ingresa al panel de profesor para confirmar o
+                    rechazar esta reserva.</p>
+
+                <div style="text-align: center;">
+                    <a href="http://localhost:5173/teacher" class="button">
+                        Ver Panel de Profesor
+                    </a>
                 </div>
             </div>
-            
-            <p>Por favor, ingresa al panel de profesor para confirmar o rechazar esta reserva.</p>
-            
-            <div style="text-align: center;">
-                <a href="http://localhost:5173/teacher" class="button">
-                    Ver Panel de Profesor
-                </a>
+
+            <div class="footer">
+                <p>Este email fue enviado automáticamente por TatuTaller</p>
+                <p>© 2025 TatuTaller - Taller de Cerámica Artesanal</p>
             </div>
         </div>
-        
-        <div class="footer">
-            <p>Este email fue enviado automáticamente por TatuTaller</p>
-            <p>© 2025 TatuTaller - Taller de Cerámica Artesanal</p>
-        </div>
-    </div>
-</body>
+    </body>
 </html>

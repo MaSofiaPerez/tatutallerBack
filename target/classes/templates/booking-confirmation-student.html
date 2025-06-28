@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reserva Confirmada - TatuTaller</title>
-    <style>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Reserva Confirmada - TatuTaller</title>
+        <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
@@ -97,63 +97,71 @@
             font-size: 14px;
         }
     </style>
-</head>
-<body>
-    <div class="email-container">
-        <div class="header">
-            <div class="logo">🏺 TatuTaller</div>
-            <p>Taller de Cerámica Artesanal</p>
-            <div class="success-badge">✓ Reserva Confirmada</div>
-        </div>
-        
-        <div class="content">
-            <h2>¡Tu reserva ha sido confirmada!</h2>
-            
-            <p>Hola <strong th:text="${studentName}">Estudiante</strong>,</p>
-            
-            <p>¡Excelente noticia! Tu profesor ha confirmado tu reserva. Te esperamos en el taller.</p>
-            
-            <div class="booking-details">
-                <h3>📋 Detalles de tu Clase</h3>
-                <div class="detail-item">
-                    <span class="detail-label">Clase:</span>
-                    <span class="detail-value" th:text="${className}">Nombre de la Clase</span>
+    </head>
+    <body>
+        <div class="email-container">
+            <div class="header">
+                <div class="logo">🏺 TatuTaller</div>
+                <p>Taller de Cerámica Artesanal</p>
+                <div class="success-badge">✓ Reserva Confirmada</div>
+            </div>
+
+            <div class="content">
+                <h2>¡Tu reserva ha sido confirmada!</h2>
+
+                <p>Hola <strong
+                        th:text="${studentName}">Estudiante</strong>,</p>
+
+                <p>¡Excelente noticia! Tu profesor ha confirmado tu reserva. Te
+                    esperamos en el taller.</p>
+
+                <div class="booking-details">
+                    <h3>📋 Detalles de tu Clase</h3>
+                    <div class="detail-item">
+                        <span class="detail-label">Clase:</span>
+                        <span class="detail-value" th:text="${className}">Nombre
+                            de la Clase</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Profesor:</span>
+                        <span class="detail-value"
+                            th:text="${teacherName}">Nombre del Profesor</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Fecha:</span>
+                        <span class="detail-value"
+                            th:text="${bookingDate}">Fecha</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Hora:</span>
+                        <span class="detail-value"
+                            th:text="${bookingTime}">Hora</span>
+                    </div>
                 </div>
-                <div class="detail-item">
-                    <span class="detail-label">Profesor:</span>
-                    <span class="detail-value" th:text="${teacherName}">Nombre del Profesor</span>
+
+                <div class="tips">
+                    <h4>💡 Recomendaciones para tu clase:</h4>
+                    <ul>
+                        <li>Llega 10 minutos antes para prepararte</li>
+                        <li>Usa ropa cómoda que pueda ensuciarse</li>
+                        <li>Trae una toalla pequeña para limpiarte las
+                            manos</li>
+                        <li>¡Ven con ganas de aprender y crear!</li>
+                    </ul>
                 </div>
-                <div class="detail-item">
-                    <span class="detail-label">Fecha:</span>
-                    <span class="detail-value" th:text="${bookingDate}">Fecha</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Hora:</span>
-                    <span class="detail-value" th:text="${bookingTime}">Hora</span>
+
+                <div style="text-align: center;">
+                    <a href="http://localhost:5173/my-bookings" class="button">
+                        Ver Mis Reservas
+                    </a>
                 </div>
             </div>
-            
-            <div class="tips">
-                <h4>💡 Recomendaciones para tu clase:</h4>
-                <ul>
-                    <li>Llega 10 minutos antes para prepararte</li>
-                    <li>Usa ropa cómoda que pueda ensuciarse</li>
-                    <li>Trae una toalla pequeña para limpiarte las manos</li>
-                    <li>¡Ven con ganas de aprender y crear!</li>
-                </ul>
-            </div>
-            
-            <div style="text-align: center;">
-                <a href="http://localhost:5173/my-bookings" class="button">
-                    Ver Mis Reservas
-                </a>
+
+            <div class="footer">
+                <p>¿Necesitas cancelar o modificar tu reserva? Contáctanos lo
+                    antes posible.</p>
+                <p>© 2025 TatuTaller - Taller de Cerámica Artesanal</p>
             </div>
         </div>
-        
-        <div class="footer">
-            <p>¿Necesitas cancelar o modificar tu reserva? Contáctanos lo antes posible.</p>
-            <p>© 2025 TatuTaller - Taller de Cerámica Artesanal</p>
-        </div>
-    </div>
-</body>
+    </body>
 </html>

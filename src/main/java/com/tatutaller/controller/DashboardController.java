@@ -15,16 +15,16 @@ import java.util.List;
 @RequestMapping("/api/admin/dashboard")
 @PreAuthorize("hasRole('ADMIN')")
 public class DashboardController {
-    
+
     @Autowired
     private DashboardService dashboardService;
-    
+
     @GetMapping("/stats")
     public ResponseEntity<DashboardStatsResponse> getDashboardStats() {
         DashboardStatsResponse stats = dashboardService.getDashboardStats();
         return ResponseEntity.ok(stats);
     }
-    
+
     @GetMapping("/recent-bookings")
     public ResponseEntity<List<Booking>> getRecentBookings() {
         List<Booking> bookings = dashboardService.getRecentBookings();

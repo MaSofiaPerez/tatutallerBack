@@ -16,55 +16,55 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class AuthService {
-    
+
     @Autowired
     AuthenticationManager authenticationManager;
-    
+
     @Autowired
     UserRepository userRepository;
-    
+
     @Autowired
     PasswordEncoder encoder;
-    
+
     @Autowired
     JwtUtils jwtUtils;
-    
+
     public JwtResponse authenticateUser(LoginRequest loginRequest) {
         Authentication authentication = authenticationManager
                 .authenticate(new UsernamePasswordAuthenticationToken(
-                        loginRequest.getEmail(), 
+                        loginRequest.getEmail(),
                         loginRequest.getPassword()));
-        
+
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = jwtUtils.generateJwtToken(authentication);
-        
+
         User user = userRepository.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        
+
         return new JwtResponse(jwt, user);
     }
-    
+
     public User registerUser(RegisterRequest signUpRequest) {
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
             throw new RuntimeException("Error: El email ya está en uso!");
         }
-        
+
         // Crear nueva cuenta de usuario
         User user = new User(signUpRequest.getName(),
-                           signUpRequest.getEmail(),
-                           encoder.encode(signUpRequest.getPassword()));
-        
+                signUpRequest.getEmail(),
+                encoder.encode(signUpRequest.getPassword()));
+
         user.setPhone(signUpRequest.getPhone());
         user.setAddress(signUpRequest.getAddress());
-        
+
         return userRepository.save(user);
     }
-    
+
     // Método temporal para debugging
     public java.util.List<java.util.Map<String, Object>> getAllUsersForDebug() {
         java.util.List<User> users = userRepository.findAll();
         java.util.List<java.util.Map<String, Object>> result = new java.util.ArrayList<>();
-        
+
         for (User user : users) {
             java.util.Map<String, Object> userInfo = new java.util.HashMap<>();
             userInfo.put("id", user.getId());
@@ -72,10 +72,11 @@ public class AuthService {
             userInfo.put("email", user.getEmail());
             userInfo.put("role", user.getRole());
             userInfo.put("status", user.getStatus());
-            userInfo.put("passwordStartsWith", user.getPassword().substring(0, Math.min(10, user.getPassword().length())));
+            userInfo.put("passwordStartsWith",
+                    user.getPassword().substring(0, Math.min(10, user.getPassword().length())));
             result.add(userInfo);
         }
-        
+
         return result;
     }
 }

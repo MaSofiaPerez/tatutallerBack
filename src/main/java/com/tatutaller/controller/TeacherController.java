@@ -22,7 +22,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/teacher")
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:3000"})
+@CrossOrigin(origins = { "http://localhost:5173", "http://localhost:3000" })
 public class TeacherController {
 
     @Autowired
@@ -82,14 +82,14 @@ public class TeacherController {
         try {
             Optional<Booking> bookingOpt = bookingRepository.findById(id);
             Map<String, String> response = new HashMap<>();
-            
+
             if (bookingOpt.isEmpty()) {
                 response.put("message", "Reserva no encontrada");
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
             }
 
             Booking booking = bookingOpt.get();
-            
+
             // Verificar que la reserva pertenece a una clase del profesor
             Optional<User> userOpt = userRepository.findById(userPrincipal.getId());
             if (userOpt.isEmpty()) {
@@ -106,7 +106,7 @@ public class TeacherController {
             String status = request.get("status");
             Booking.BookingStatus oldStatus = booking.getStatus();
             Booking.BookingStatus newStatus = Booking.BookingStatus.valueOf(status.toUpperCase());
-            
+
             booking.setStatus(newStatus);
             bookingRepository.save(booking);
 
@@ -115,22 +115,20 @@ public class TeacherController {
                 if (newStatus == Booking.BookingStatus.CONFIRMED && oldStatus != Booking.BookingStatus.CONFIRMED) {
                     // Reserva confirmada
                     emailService.sendBookingConfirmationToStudent(
-                        booking.getUser().getEmail(),
-                        booking.getUser().getName(),
-                        booking.getClassEntity().getName(),
-                        teacher.getName(),
-                        booking.getBookingDate().toString(),
-                        booking.getBookingTime().toString()
-                    );
+                            booking.getUser().getEmail(),
+                            booking.getUser().getName(),
+                            booking.getClassEntity().getName(),
+                            teacher.getName(),
+                            booking.getBookingDate().toString(),
+                            booking.getBookingTime().toString());
                 } else if (newStatus == Booking.BookingStatus.CANCELLED) {
                     // Reserva cancelada
                     String reason = request.get("reason");
                     emailService.sendBookingCancellationToStudent(
-                        booking.getUser().getEmail(),
-                        booking.getUser().getName(),
-                        booking.getClassEntity().getName(),
-                        reason
-                    );
+                            booking.getUser().getEmail(),
+                            booking.getUser().getName(),
+                            booking.getClassEntity().getName(),
+                            reason);
                 }
             } catch (Exception e) {
                 // Log error but don't fail the status update
@@ -155,14 +153,14 @@ public class TeacherController {
         try {
             Optional<Booking> bookingOpt = bookingRepository.findById(id);
             Map<String, String> response = new HashMap<>();
-            
+
             if (bookingOpt.isEmpty()) {
                 response.put("message", "Reserva no encontrada");
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
             }
 
             Booking booking = bookingOpt.get();
-            
+
             // Verificar que la reserva pertenece a una clase del profesor
             Optional<User> userOpt = userRepository.findById(userPrincipal.getId());
             if (userOpt.isEmpty()) {
@@ -200,7 +198,7 @@ public class TeacherController {
             }
 
             ClassEntity classEntity = classOpt.get();
-            
+
             // Verificar que la clase pertenece al profesor
             Optional<User> userOpt = userRepository.findById(userPrincipal.getId());
             if (userOpt.isEmpty()) {

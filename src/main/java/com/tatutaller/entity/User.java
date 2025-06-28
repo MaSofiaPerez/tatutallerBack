@@ -5,6 +5,8 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -51,15 +53,71 @@ public class User {
     private List<Booking> bookings = new ArrayList<>();
 
     public enum Role {
-        USER, TEACHER, ADMIN
+        USER("usuario"),
+        TEACHER("teacher"),
+        ADMIN("admin");
+
+        private final String displayName;
+
+        Role(String displayName) {
+            this.displayName = displayName;
+        }
+
+        @JsonValue
+        public String getDisplayName() {
+            return displayName;
+        }
+
+        @JsonCreator
+        public static Role fromDisplayName(String displayName) {
+            for (Role role : Role.values()) {
+                if (role.displayName.equalsIgnoreCase(displayName)) {
+                    return role;
+                }
+            }
+            // Fallback para valores en inglés
+            try {
+                return Role.valueOf(displayName.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Valor de rol no válido: " + displayName);
+            }
+        }
     }
 
     public enum UserStatus {
-        ACTIVE, INACTIVE
+        ACTIVE("activo"),
+        INACTIVE("inactivo");
+
+        private final String displayName;
+
+        UserStatus(String displayName) {
+            this.displayName = displayName;
+        }
+
+        @JsonValue
+        public String getDisplayName() {
+            return displayName;
+        }
+
+        @JsonCreator
+        public static UserStatus fromDisplayName(String displayName) {
+            for (UserStatus status : UserStatus.values()) {
+                if (status.displayName.equalsIgnoreCase(displayName)) {
+                    return status;
+                }
+            }
+            // Fallback para valores en inglés
+            try {
+                return UserStatus.valueOf(displayName.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Valor de estado no válido: " + displayName);
+            }
+        }
     }
 
     // Constructors
-    public User() {}
+    public User() {
+    }
 
     public User(String name, String email, String password) {
         this.name = name;

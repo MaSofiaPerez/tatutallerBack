@@ -2,6 +2,7 @@ package com.tatutaller.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -17,11 +18,13 @@ public class Booking {
     @NotNull(message = "El usuario es obligatorio")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
+    @JsonIgnoreProperties({ "bookings", "password" })
     private User user;
 
     @NotNull(message = "La clase es obligatoria")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "class_id")
+    @JsonIgnoreProperties({ "bookings", "instructor" })
     private ClassEntity classEntity;
 
     @NotNull(message = "La fecha es obligatoria")
@@ -49,7 +52,8 @@ public class Booking {
     }
 
     // Constructors
-    public Booking() {}
+    public Booking() {
+    }
 
     public Booking(User user, ClassEntity classEntity, LocalDate bookingDate, LocalTime bookingTime) {
         this.user = user;

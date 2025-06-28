@@ -1,12 +1,16 @@
+C:\Users\sofia\OneDrive\Documents\ORT ATI\Proyecto Integrador\TatuTallerBACK\src\main\java\com\tatutaller\dto\request\BookingNotificationRequest.java
 C:\Users\sofia\OneDrive\Documents\ORT ATI\Proyecto Integrador\TatuTallerBACK\src\main\java\com\tatutaller\service\AuthService.java
 C:\Users\sofia\OneDrive\Documents\ORT ATI\Proyecto Integrador\TatuTallerBACK\src\main\java\com\tatutaller\TatuTallerBackendApplication.java
 C:\Users\sofia\OneDrive\Documents\ORT ATI\Proyecto Integrador\TatuTallerBACK\src\main\java\com\tatutaller\repository\ClassRepository.java
 C:\Users\sofia\OneDrive\Documents\ORT ATI\Proyecto Integrador\TatuTallerBACK\src\main\java\com\tatutaller\repository\ProductRepository.java
+C:\Users\sofia\OneDrive\Documents\ORT ATI\Proyecto Integrador\TatuTallerBACK\src\main\java\com\tatutaller\config\GlobalExceptionHandler.java
+C:\Users\sofia\OneDrive\Documents\ORT ATI\Proyecto Integrador\TatuTallerBACK\src\main\java\com\tatutaller\controller\UserInfoController.java
 C:\Users\sofia\OneDrive\Documents\ORT ATI\Proyecto Integrador\TatuTallerBACK\src\main\java\com\tatutaller\dto\request\LoginRequest.java
 C:\Users\sofia\OneDrive\Documents\ORT ATI\Proyecto Integrador\TatuTallerBACK\src\main\java\com\tatutaller\entity\User.java
 C:\Users\sofia\OneDrive\Documents\ORT ATI\Proyecto Integrador\TatuTallerBACK\src\main\java\com\tatutaller\config\WebSecurityConfig.java
 C:\Users\sofia\OneDrive\Documents\ORT ATI\Proyecto Integrador\TatuTallerBACK\src\main\java\com\tatutaller\config\DataLoader.java
 C:\Users\sofia\OneDrive\Documents\ORT ATI\Proyecto Integrador\TatuTallerBACK\src\main\java\com\tatutaller\service\DashboardService.java
+C:\Users\sofia\OneDrive\Documents\ORT ATI\Proyecto Integrador\TatuTallerBACK\src\main\java\com\tatutaller\dto\response\PublicClassResponse.java
 C:\Users\sofia\OneDrive\Documents\ORT ATI\Proyecto Integrador\TatuTallerBACK\src\main\java\com\tatutaller\repository\BookingRepository.java
 C:\Users\sofia\OneDrive\Documents\ORT ATI\Proyecto Integrador\TatuTallerBACK\src\main\java\com\tatutaller\dto\request\RegisterRequest.java
 C:\Users\sofia\OneDrive\Documents\ORT ATI\Proyecto Integrador\TatuTallerBACK\src\main\java\com\tatutaller\service\UserDetailsServiceImpl.java
@@ -27,3 +31,4 @@ C:\Users\sofia\OneDrive\Documents\ORT ATI\Proyecto Integrador\TatuTallerBACK\src
 C:\Users\sofia\OneDrive\Documents\ORT ATI\Proyecto Integrador\TatuTallerBACK\src\main\java\com\tatutaller\controller\BookingController.java
 C:\Users\sofia\OneDrive\Documents\ORT ATI\Proyecto Integrador\TatuTallerBACK\src\main\java\com\tatutaller\controller\TeacherController.java
 C:\Users\sofia\OneDrive\Documents\ORT ATI\Proyecto Integrador\TatuTallerBACK\src\main\java\com\tatutaller\repository\UserRepository.java
+C:\Users\sofia\OneDrive\Documents\ORT ATI\Proyecto Integrador\TatuTallerBACK\src\main\java\com\tatutaller\dto\request\BookingRequest.java

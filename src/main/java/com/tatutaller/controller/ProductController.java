@@ -15,17 +15,17 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api")
 public class ProductController {
-    
+
     @Autowired
     private ProductRepository productRepository;
-    
+
     // Endpoint público para obtener productos
     @GetMapping("/public/products")
     public ResponseEntity<List<Product>> getAllProducts() {
         List<Product> products = productRepository.findAvailableProducts();
         return ResponseEntity.ok(products);
     }
-    
+
     // Endpoints administrativos
     @GetMapping("/admin/products")
     @PreAuthorize("hasRole('ADMIN')")
@@ -33,27 +33,27 @@ public class ProductController {
         List<Product> products = productRepository.findAll();
         return ResponseEntity.ok(products);
     }
-    
+
     @GetMapping("/admin/products/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Product> getProductById(@PathVariable Long id) {
         Optional<Product> product = productRepository.findById(id);
         return product.map(ResponseEntity::ok)
-                     .orElse(ResponseEntity.notFound().build());
+                .orElse(ResponseEntity.notFound().build());
     }
-    
+
     @PostMapping("/admin/products")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Product> createProduct(@Valid @RequestBody Product product) {
         Product savedProduct = productRepository.save(product);
         return ResponseEntity.ok(savedProduct);
     }
-    
+
     @PutMapping("/admin/products/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Product> updateProduct(@PathVariable Long id, @Valid @RequestBody Product productDetails) {
         Optional<Product> optionalProduct = productRepository.findById(id);
-        
+
         if (optionalProduct.isPresent()) {
             Product product = optionalProduct.get();
             product.setName(productDetails.getName());
@@ -63,14 +63,14 @@ public class ProductController {
             product.setImageUrl(productDetails.getImageUrl());
             product.setCategory(productDetails.getCategory());
             product.setStatus(productDetails.getStatus());
-            
+
             Product updatedProduct = productRepository.save(product);
             return ResponseEntity.ok(updatedProduct);
         } else {
             return ResponseEntity.notFound().build();
         }
     }
-    
+
     @DeleteMapping("/admin/products/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteProduct(@PathVariable Long id) {

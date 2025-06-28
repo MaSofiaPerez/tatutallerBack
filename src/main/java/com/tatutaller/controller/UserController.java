@@ -15,27 +15,27 @@ import java.util.Optional;
 @RequestMapping("/api/admin/users")
 @PreAuthorize("hasRole('ADMIN')")
 public class UserController {
-    
+
     @Autowired
     private UserRepository userRepository;
-    
+
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
         List<User> users = userRepository.findAll();
         return ResponseEntity.ok(users);
     }
-    
+
     @GetMapping("/{id}")
     public ResponseEntity<User> getUserById(@PathVariable Long id) {
         Optional<User> user = userRepository.findById(id);
         return user.map(ResponseEntity::ok)
-                   .orElse(ResponseEntity.notFound().build());
+                .orElse(ResponseEntity.notFound().build());
     }
-    
+
     @PutMapping("/{id}")
     public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User userDetails) {
         Optional<User> optionalUser = userRepository.findById(id);
-        
+
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
             user.setName(userDetails.getName());
@@ -44,14 +44,14 @@ public class UserController {
             user.setAddress(userDetails.getAddress());
             user.setRole(userDetails.getRole());
             user.setStatus(userDetails.getStatus());
-            
+
             User updatedUser = userRepository.save(user);
             return ResponseEntity.ok(updatedUser);
         } else {
             return ResponseEntity.notFound().build();
         }
     }
-    
+
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
         if (userRepository.existsById(id)) {
@@ -60,5 +60,12 @@ public class UserController {
         } else {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    // Endpoint para obtener solo profesores (para admin)
+    @GetMapping("/teachers")
+    public ResponseEntity<List<User>> getTeachers() {
+        List<User> teachers = userRepository.findByRole(User.Role.TEACHER);
+        return ResponseEntity.ok(teachers);
     }
 }

@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -45,9 +47,9 @@ public class ClassEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "instructor_id")
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "bookings"})
+    @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler", "bookings" })
     private User instructor;
-    
+
     private String materials; // Materiales incluidos
     private String requirements; // Requisitos previos
 
@@ -58,18 +60,76 @@ public class ClassEntity {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "classEntity", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnoreProperties({ "classEntity", "user" })
     private List<Booking> bookings = new ArrayList<>();
 
     public enum ClassLevel {
-        BEGINNER, INTERMEDIATE, ADVANCED
+        BEGINNER("Principiante"),
+        INTERMEDIATE("Intermedio"),
+        ADVANCED("Avanzado");
+
+        private final String displayName;
+
+        ClassLevel(String displayName) {
+            this.displayName = displayName;
+        }
+
+        @JsonValue
+        public String getDisplayName() {
+            return displayName;
+        }
+
+        @JsonCreator
+        public static ClassLevel fromDisplayName(String displayName) {
+            for (ClassLevel level : ClassLevel.values()) {
+                if (level.displayName.equalsIgnoreCase(displayName)) {
+                    return level;
+                }
+            }
+            // Fallback para valores en inglés
+            try {
+                return ClassLevel.valueOf(displayName.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Valor de nivel no válido: " + displayName);
+            }
+        }
     }
 
     public enum ClassStatus {
-        ACTIVE, INACTIVE, FULL
+        ACTIVE("Activo"),
+        INACTIVE("Inactivo"),
+        FULL("Completo");
+
+        private final String displayName;
+
+        ClassStatus(String displayName) {
+            this.displayName = displayName;
+        }
+
+        @JsonValue
+        public String getDisplayName() {
+            return displayName;
+        }
+
+        @JsonCreator
+        public static ClassStatus fromDisplayName(String displayName) {
+            for (ClassStatus status : ClassStatus.values()) {
+                if (status.displayName.equalsIgnoreCase(displayName)) {
+                    return status;
+                }
+            }
+            // Fallback para valores en inglés
+            try {
+                return ClassStatus.valueOf(displayName.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Valor de estado no válido: " + displayName);
+            }
+        }
     }
 
     // Constructors
-    public ClassEntity() {}
+    public ClassEntity() {
+    }
 
     public ClassEntity(String name, String description, BigDecimal price, String duration, Integer maxCapacity) {
         this.name = name;
