@@ -8,12 +8,14 @@ import com.tatutaller.repository.ProductRepository;
 import com.tatutaller.repository.ClassRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 
 @Component
+@Profile("!test")
 public class DataLoader implements CommandLineRunner {
 
     @Autowired

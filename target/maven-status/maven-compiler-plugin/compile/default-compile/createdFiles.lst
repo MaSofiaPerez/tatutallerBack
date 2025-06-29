@@ -4,9 +4,11 @@ com\tatutaller\controller\ProductController.class
 com\tatutaller\service\UserDetailsServiceImpl.class
 com\tatutaller\entity\User$Role.class
 com\tatutaller\security\JwtUtils.class
+com\tatutaller\config\GlobalExceptionHandler.class
 com\tatutaller\entity\ClassEntity$ClassStatus.class
 com\tatutaller\entity\User.class
 com\tatutaller\TatuTallerBackendApplication.class
+com\tatutaller\dto\request\BookingRequest.class
 com\tatutaller\config\DataLoader.class
 com\tatutaller\controller\ClassController.class
 com\tatutaller\service\AuthService.class
@@ -17,11 +19,13 @@ com\tatutaller\repository\BookingRepository.class
 com\tatutaller\entity\ClassEntity$ClassLevel.class
 com\tatutaller\controller\UserController.class
 com\tatutaller\service\EmailService.class
+com\tatutaller\dto\response\PublicClassResponse.class
 com\tatutaller\entity\Product$ProductCategory.class
 com\tatutaller\entity\ClassEntity.class
 com\tatutaller\security\UserPrincipal.class
 com\tatutaller\service\DashboardService.class
 com\tatutaller\controller\AuthController.class
+com\tatutaller\controller\UserInfoController.class
 com\tatutaller\entity\Product.class
 com\tatutaller\repository\ProductRepository.class
 com\tatutaller\dto\response\JwtResponse.class
@@ -30,6 +34,7 @@ com\tatutaller\controller\TeacherController.class
 com\tatutaller\config\WebSecurityConfig.class
 com\tatutaller\dto\request\LoginRequest.class
 com\tatutaller\dto\response\DashboardStatsResponse.class
+com\tatutaller\dto\request\BookingNotificationRequest.class
 com\tatutaller\entity\Product$ProductStatus.class
 com\tatutaller\repository\UserRepository.class
 com\tatutaller\entity\Booking.class
