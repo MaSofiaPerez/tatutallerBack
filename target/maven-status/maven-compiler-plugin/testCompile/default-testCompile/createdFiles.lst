@@ -1,5 +1,0 @@
-com\tatutaller\controller\AuthControllerTest.class
-com\tatutaller\service\AuthServiceTest.class
-com\tatutaller\validation\ValidationParameterizedTest.class
-com\tatutaller\integration\AuthIntegrationTest.class
-com\tatutaller\TatuTallerBackendApplicationTests.class
