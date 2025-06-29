@@ -79,4 +79,32 @@ public class AuthService {
 
         return result;
     }
+
+    public void changePassword(String email, String newPassword) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        user.setPassword(encoder.encode(newPassword));
+        user.setMustChangePassword(false);
+        userRepository.save(user);
+    }
+
+    public void changePasswordWithValidation(String email, String currentPassword, String newPassword) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        // Validate current password
+        if (!encoder.matches(currentPassword, user.getPassword())) {
+            throw new RuntimeException("La contraseña actual es incorrecta");
+        }
+
+        user.setPassword(encoder.encode(newPassword));
+        user.setMustChangePassword(false);
+        userRepository.save(user);
+    }
+
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+    }
 }

@@ -28,7 +28,6 @@ public class User {
     @Column(unique = true)
     private String email;
 
-    @NotBlank(message = "La contraseña es obligatoria")
     @Size(min = 6, message = "La contraseña debe tener al menos 6 caracteres")
     @JsonIgnore
     private String password;
@@ -38,6 +37,9 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     private UserStatus status = UserStatus.ACTIVE;
+
+    @Column(name = "must_change_password")
+    private Boolean mustChangePassword = false;
 
     private String phone;
     private String address;
@@ -184,6 +186,14 @@ public class User {
 
     public void setStatus(UserStatus status) {
         this.status = status;
+    }
+
+    public Boolean getMustChangePassword() {
+        return mustChangePassword;
+    }
+
+    public void setMustChangePassword(Boolean mustChangePassword) {
+        this.mustChangePassword = mustChangePassword;
     }
 
     public String getPhone() {

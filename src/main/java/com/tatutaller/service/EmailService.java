@@ -178,4 +178,33 @@ public class EmailService {
             sendSimpleEmail(userEmail, "¡Bienvenido a TatuTaller!", message);
         }
     }
+
+    /**
+     * Enviar email con contraseña temporal para usuarios creados por admin
+     */
+    public void sendTemporaryPasswordEmail(String userEmail, String userName, String temporaryPassword) {
+        try {
+            Context context = new Context();
+            context.setVariable("userName", userName);
+            context.setVariable("userEmail", userEmail);
+            context.setVariable("temporaryPassword", temporaryPassword);
+            context.setVariable("loginUrl", "http://localhost:3000/login");
+
+            sendHtmlEmail(userEmail, "Credenciales de acceso - TatuTaller", "temporary-password-email", context);
+        } catch (Exception e) {
+            System.err.println("Error enviando email HTML, enviando texto plano: " + e.getMessage());
+
+            // Fallback a email de texto plano
+            String message = String.format(
+                    "¡Hola %s!\n\n" +
+                            "Se ha creado una cuenta para ti en TatuTaller.\n\n" +
+                            "Tus credenciales de acceso son:\n" +
+                            "Email: %s\n" +
+                            "Contraseña temporal: %s\n\n" +
+                            "Por favor, inicia sesión y cambia tu contraseña en el primer acceso.\n\n" +
+                            "Saludos,\nEl equipo de TatuTaller",
+                    userName, userEmail, temporaryPassword);
+            sendSimpleEmail(userEmail, "Credenciales de acceso - TatuTaller", message);
+        }
+    }
 }

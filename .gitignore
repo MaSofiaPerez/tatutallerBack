@@ -1,0 +1,7 @@
+# Archivos que no deben subirse al repositorio
+.env
+target/
+.DS_Store
+*.log
+.idea/
+*.iml

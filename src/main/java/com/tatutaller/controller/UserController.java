@@ -2,10 +2,14 @@ package com.tatutaller.controller;
 
 import com.tatutaller.entity.User;
 import com.tatutaller.repository.UserRepository;
+import com.tatutaller.service.PasswordGeneratorService;
+import com.tatutaller.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,6 +22,15 @@ public class UserController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private PasswordGeneratorService passwordGeneratorService;
+
+    @Autowired
+    private EmailService emailService;
 
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
@@ -67,5 +80,43 @@ public class UserController {
     public ResponseEntity<List<User>> getTeachers() {
         List<User> teachers = userRepository.findByRole(User.Role.TEACHER);
         return ResponseEntity.ok(teachers);
+    }
+
+    // Endpoint para crear un nuevo usuario
+    @PostMapping
+    public ResponseEntity<User> createUser(@Valid @RequestBody User userRequest) {
+        try {
+            // Verificar si ya existe un usuario con ese email
+            if (userRepository.findByEmail(userRequest.getEmail()).isPresent()) {
+                return ResponseEntity.badRequest().build();
+            }
+
+            // Generar contraseña temporal
+            String temporaryPassword = passwordGeneratorService.generatePassword();
+
+            // Configurar el usuario
+            userRequest.setPassword(passwordEncoder.encode(temporaryPassword));
+            userRequest.setMustChangePassword(true);
+
+            // Guardar usuario
+            User savedUser = userRepository.save(userRequest);
+
+            // Enviar email con credenciales
+            try {
+                emailService.sendTemporaryPasswordEmail(
+                        savedUser.getEmail(),
+                        savedUser.getName(),
+                        temporaryPassword);
+            } catch (Exception e) {
+                System.err.println("Error enviando email: " + e.getMessage());
+                // Continuar sin fallar, el usuario ya fue creado
+            }
+
+            return ResponseEntity.ok(savedUser);
+
+        } catch (Exception e) {
+            System.err.println("Error creando usuario: " + e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
     }
 }
