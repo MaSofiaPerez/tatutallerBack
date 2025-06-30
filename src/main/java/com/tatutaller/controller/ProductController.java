@@ -1,5 +1,6 @@
 package com.tatutaller.controller;
 
+import com.tatutaller.dto.request.ProductRequest;
 import com.tatutaller.entity.Product;
 import com.tatutaller.repository.ProductRepository;
 import jakarta.validation.Valid;
@@ -9,6 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -44,30 +46,52 @@ public class ProductController {
 
     @PostMapping("/admin/products")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Product> createProduct(@Valid @RequestBody Product product) {
-        Product savedProduct = productRepository.save(product);
-        return ResponseEntity.ok(savedProduct);
+    public ResponseEntity<?> createProduct(@Valid @RequestBody ProductRequest request) {
+        try {
+            Product product = new Product(
+                request.getName(),
+                request.getDescription(),
+                request.getPrice(),
+                request.getStock()
+            );
+
+            product.setImageUrl(request.getImageUrl());
+            product.setCategory(request.getCategory());
+            product.setStatus(request.getStatus());
+
+            Product savedProduct = productRepository.save(product);
+            return ResponseEntity.ok(savedProduct);
+
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Error al crear el producto", "error", e.getMessage()));
+        }
     }
 
     @PutMapping("/admin/products/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Product> updateProduct(@PathVariable Long id, @Valid @RequestBody Product productDetails) {
-        Optional<Product> optionalProduct = productRepository.findById(id);
+    public ResponseEntity<?> updateProduct(@PathVariable Long id, @Valid @RequestBody ProductRequest request) {
+        try {
+            Optional<Product> productOpt = productRepository.findById(id);
+            if (!productOpt.isPresent()) {
+                return ResponseEntity.notFound().build();
+            }
 
-        if (optionalProduct.isPresent()) {
-            Product product = optionalProduct.get();
-            product.setName(productDetails.getName());
-            product.setDescription(productDetails.getDescription());
-            product.setPrice(productDetails.getPrice());
-            product.setStock(productDetails.getStock());
-            product.setImageUrl(productDetails.getImageUrl());
-            product.setCategory(productDetails.getCategory());
-            product.setStatus(productDetails.getStatus());
+            Product product = productOpt.get();
+            
+            // Actualizar campos
+            product.setName(request.getName());
+            product.setDescription(request.getDescription());
+            product.setPrice(request.getPrice());
+            product.setStock(request.getStock());
+            product.setImageUrl(request.getImageUrl());
+            product.setCategory(request.getCategory());
+            product.setStatus(request.getStatus());
 
             Product updatedProduct = productRepository.save(product);
             return ResponseEntity.ok(updatedProduct);
-        } else {
-            return ResponseEntity.notFound().build();
+
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Error al actualizar el producto", "error", e.getMessage()));
         }
     }
 
