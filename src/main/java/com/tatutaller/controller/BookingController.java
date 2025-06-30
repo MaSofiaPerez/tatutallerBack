@@ -57,7 +57,8 @@ public class BookingController {
                     booking.setUser(user.get());
                     booking.setClassEntity(classEntity.get());
                     booking.setBookingDate(bookingRequest.getBookingDate());
-                    booking.setBookingTime(bookingRequest.getBookingTime());
+                    booking.setStartTime(bookingRequest.getStarTime());
+                    booking.setEndTime(bookingRequest.getEndTime());
                     booking.setNotes(bookingRequest.getNotes());
                     booking.setStatus(Booking.BookingStatus.PENDING);
 
@@ -72,7 +73,7 @@ public class BookingController {
                                     user.get().getName(),
                                     classEntity.get().getName(),
                                     booking.getBookingDate().toString(),
-                                    booking.getBookingTime().toString());
+                                    booking.getStartTime().toString() + " - " + booking.getEndTime().toString());
                         } catch (Exception e) {
                             // Log error but don't fail the booking
                             System.err.println("Error enviando email al profesor: " + e.getMessage());
@@ -174,12 +175,13 @@ public class BookingController {
             System.out.println("👨‍🎓 Nombre del estudiante: " + request.getStudentName());
 
             // No verificar que la reserva existe para evitar problemas de DB
-            // Optional<Booking> booking = bookingRepository.findById(request.getBookingId());
+            // Optional<Booking> booking =
+            // bookingRepository.findById(request.getBookingId());
             // if (!booking.isPresent()) {
-            //     response.put("success", false);
-            //     response.put("error", "Reserva no encontrada");
-            //     response.put("bookingId", request.getBookingId());
-            //     return ResponseEntity.status(404).body(response);
+            // response.put("success", false);
+            // response.put("error", "Reserva no encontrada");
+            // response.put("bookingId", request.getBookingId());
+            // return ResponseEntity.status(404).body(response);
             // }
 
             // Intentar enviar notificación al profesor
@@ -191,7 +193,7 @@ public class BookingController {
                         request.getClassName(),
                         request.getBookingDate(),
                         request.getBookingTime());
-                
+
                 System.out.println("✅ Email enviado exitosamente");
             } catch (Exception emailError) {
                 System.err.println("⚠️ Error enviando email (continuando sin fallar): " + emailError.getMessage());
@@ -228,17 +230,17 @@ public class BookingController {
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> notifyTeacherTest(@RequestBody Map<String, Object> request) {
         Map<String, Object> response = new HashMap<>();
-        
+
         try {
             System.out.println("🔔 Test endpoint recibido: " + request);
-            
+
             response.put("success", true);
             response.put("message", "Endpoint de notificación funcionando correctamente");
             response.put("receivedData", request);
             response.put("timestamp", java.time.LocalDateTime.now().toString());
-            
+
             return ResponseEntity.ok(response);
-            
+
         } catch (Exception e) {
             System.err.println("❌ Error en test endpoint: " + e.getMessage());
             response.put("success", false);
@@ -251,13 +253,13 @@ public class BookingController {
     @PostMapping("/public/test-notification")
     public ResponseEntity<Map<String, Object>> testNotificationPublic() {
         Map<String, Object> response = new HashMap<>();
-        
+
         response.put("success", true);
         response.put("message", "El backend está funcionando correctamente");
         response.put("endpoint", "/api/bookings/notify-teacher");
         response.put("status", "disponible");
         response.put("timestamp", java.time.LocalDateTime.now().toString());
-        
+
         return ResponseEntity.ok(response);
     }
 }
