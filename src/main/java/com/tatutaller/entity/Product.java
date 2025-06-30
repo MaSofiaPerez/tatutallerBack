@@ -9,6 +9,9 @@ import jakarta.validation.constraints.Min;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+
 @Entity
 @Table(name = "products")
 public class Product {
@@ -46,11 +49,67 @@ public class Product {
     private LocalDateTime updatedAt;
 
     public enum ProductCategory {
-        CERAMICA, HERRAMIENTAS, MATERIALES, DECORACION, OTROS
+        CERAMICA("Cerámica"),
+        HERRAMIENTAS("Herramientas"),
+        MATERIALES("Materiales"),
+        DECORACION("Decoración"),
+        OTROS("Otros");
+
+        private final String displayName;
+
+        ProductCategory(String displayName) {
+            this.displayName = displayName;
+        }
+
+        @JsonValue
+        public String getDisplayName() {
+            return displayName;
+        }
+
+        @JsonCreator
+        public static ProductCategory fromDisplayName(String displayName) {
+            for (ProductCategory category : ProductCategory.values()) {
+                if (category.displayName.equalsIgnoreCase(displayName)) {
+                    return category;
+                }
+            }
+            try {
+                return ProductCategory.valueOf(displayName.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Categoría no válida: " + displayName);
+            }
+        }
     }
 
     public enum ProductStatus {
-        ACTIVE, INACTIVE, OUT_OF_STOCK
+        ACTIVE("Activo"),
+        INACTIVE("Inactivo"),
+        OUT_OF_STOCK("Sin stock");
+
+        private final String displayName;
+
+        ProductStatus(String displayName) {
+            this.displayName = displayName;
+        }
+
+        @JsonValue
+        public String getDisplayName() {
+            return displayName;
+        }
+
+        @JsonCreator
+        public static ProductStatus fromDisplayName(String displayName) {
+            for (ProductStatus status : ProductStatus.values()) {
+                if (status.displayName.equalsIgnoreCase(displayName)) {
+                    return status;
+                }
+            }
+            try {
+                return ProductStatus.valueOf(displayName.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException("Estado no válido: " + displayName);
+            }
+        }
     }
 
     // Constructors
