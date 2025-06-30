@@ -39,4 +39,19 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     @Query("SELECT SUM(c.price) FROM Booking b JOIN b.classEntity c WHERE b.status = 'CONFIRMED'")
     Double calculateTotalRevenue();
+
+    @Query("""
+                SELECT b FROM Booking b
+                WHERE b.classEntity = :classEntity
+                  AND b.bookingDate = :date
+                  AND b.status IN ('PENDING', 'CONFIRMED')
+                  AND (
+                        (b.startTime < :endTime AND b.endTime > :startTime)
+                      )
+            """)
+    List<Booking> findOverlappingBookings(
+            @Param("classEntity") ClassEntity classEntity,
+            @Param("date") LocalDate date,
+            @Param("startTime") java.time.LocalTime startTime,
+            @Param("endTime") java.time.LocalTime endTime);
 }
