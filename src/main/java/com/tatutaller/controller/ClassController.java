@@ -4,6 +4,8 @@ import com.tatutaller.entity.ClassEntity;
 import com.tatutaller.entity.User;
 import com.tatutaller.repository.ClassRepository;
 import com.tatutaller.repository.UserRepository;
+import com.tatutaller.service.UserService;
+import com.tatutaller.dto.request.CreateClassRequest;
 import com.tatutaller.dto.response.PublicClassResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +29,9 @@ public class ClassController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private UserService userService;
 
     // Endpoint público para obtener clases
     @GetMapping("/public/classes")
@@ -82,20 +87,40 @@ public class ClassController {
 
     @PostMapping("/admin/classes")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ClassEntity> createClass(@Valid @RequestBody ClassEntity classEntity) {
-        // Si hay un instructor asignado, asegurar que esté correctamente vinculado
-        if (classEntity.getInstructor() != null && classEntity.getInstructor().getId() != null) {
-            Optional<User> instructor = userRepository.findById(classEntity.getInstructor().getId());
-            if (instructor.isPresent()) {
-                classEntity.setInstructor(instructor.get());
-            } else {
-                // Si el instructor no existe, crear respuesta de error
-                return ResponseEntity.badRequest().build();
-            }
-        }
+    public ResponseEntity<?> createClass(@Valid @RequestBody CreateClassRequest request) {
+        try {
+            User teacher = userService.findById(request.getTeacherId());
 
-        ClassEntity savedClass = classRepository.save(classEntity);
-        return ResponseEntity.ok(savedClass);
+            if (teacher.getRole() != User.Role.TEACHER) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("message", "El usuario seleccionado no es un profesor"));
+            }
+
+            ClassEntity classEntity = new ClassEntity(
+                    request.getName(),
+                    request.getPrice(),
+                    request.getDayOfWeek(),
+                    request.getStartTime(),
+                    request.getEndTime(),
+                    request.getMaxCapacity(),
+                    teacher);
+
+            classEntity.setDescription(request.getDescription()); 
+            classEntity.setDuration(request.getDuration());
+            classEntity.setLevel(request.getLevel());
+            classEntity.setMaterials(request.getMaterials());
+            classEntity.setRequirements(request.getRequirements());
+
+            ClassEntity savedClass = classRepository.save(classEntity);
+            return ResponseEntity.ok(savedClass);
+
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "Error al crear la clase: " + e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError() 
+                    .body(Map.of("message", "Error interno del servidor"));
+        }
     }
 
     @PutMapping("/admin/classes/{id}")

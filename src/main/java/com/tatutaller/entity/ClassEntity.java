@@ -3,6 +3,7 @@ package com.tatutaller.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -10,7 +11,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,8 +37,24 @@ public class ClassEntity {
     @Column(precision = 10, scale = 2)
     private BigDecimal price;
 
-    @NotBlank(message = "La duración es obligatoria")
-    private String duration; // e.g., "2 horas", "3 días"
+    @NotNull(message = "El día de la semana es obligatorio")
+    @Column(name = "day_of_week")
+    private DayOfWeek dayOfWeek;
+
+    @NotNull(message = "La hora de inicio es obligatoria")
+    @Column(name = "start_time")
+    private LocalTime startTime;
+
+    @NotNull(message = "La hora de fin es obligatoria")
+    @Column(name = "end_time")
+    private LocalTime endTime;
+
+    @Column(length = 50)
+    private String duration;
+
+    public DayOfWeek getDayOfWeek() {
+        return dayOfWeek;
+    }
 
     @Min(value = 1, message = "La capacidad máxima debe ser al menos 1")
     private Integer maxCapacity;
@@ -66,7 +86,8 @@ public class ClassEntity {
     public enum ClassLevel {
         BEGINNER("Principiante"),
         INTERMEDIATE("Intermedio"),
-        ADVANCED("Avanzado");
+        ADVANCED("Avanzado"),
+        ALL_LEVELS("Todos los Niveles");
 
         private final String displayName;
 
@@ -131,12 +152,16 @@ public class ClassEntity {
     public ClassEntity() {
     }
 
-    public ClassEntity(String name, String description, BigDecimal price, String duration, Integer maxCapacity) {
+    public ClassEntity(String name, BigDecimal price, DayOfWeek dayOfWeek,
+            LocalTime startTime, LocalTime endTime, Integer maxCapacity, User instructor) {
         this.name = name;
-        this.description = description;
         this.price = price;
-        this.duration = duration;
+        this.dayOfWeek = dayOfWeek;
+        this.startTime = startTime;
+        this.endTime = endTime;
         this.maxCapacity = maxCapacity;
+        this.instructor = instructor;
+        this.status = ClassStatus.ACTIVE;
     }
 
     // Lifecycle methods
@@ -185,7 +210,14 @@ public class ClassEntity {
     }
 
     public String getDuration() {
-        return duration;
+        if (duration != null && !duration.trim().isEmpty()) {
+            return duration;
+        }
+        if (startTime != null && endTime != null) {
+            long hours = Duration.between(startTime, endTime).toHours();
+            return hours + " horas";
+        }
+        return "Duración no definida";
     }
 
     public void setDuration(String duration) {
@@ -262,5 +294,33 @@ public class ClassEntity {
 
     public void setBookings(List<Booking> bookings) {
         this.bookings = bookings;
+    }
+
+    public void setDayOfWeek(DayOfWeek dayOfWeek) {
+        this.dayOfWeek = dayOfWeek;
+    }
+
+    public LocalTime getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(LocalTime startTime) {
+        this.startTime = startTime;
+    }
+
+    public LocalTime getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(LocalTime endTime) {
+        this.endTime = endTime;
+    }
+
+    @AssertTrue(message = "La hora de fin debe ser posterior a la hora de inicio")
+    private boolean isValidTimeRange() {
+        if (startTime == null || endTime == null) {
+            return true; // Si no se han definido las horas, no hay validación
+        }
+        return startTime.isBefore(endTime);
     }
 }
