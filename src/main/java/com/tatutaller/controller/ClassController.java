@@ -105,7 +105,7 @@ public class ClassController {
                     request.getMaxCapacity(),
                     teacher);
 
-            classEntity.setDescription(request.getDescription()); 
+            classEntity.setDescription(request.getDescription());
             classEntity.setDuration(request.getDuration());
             classEntity.setLevel(request.getLevel());
             classEntity.setMaterials(request.getMaterials());
@@ -118,46 +118,54 @@ public class ClassController {
             return ResponseEntity.badRequest()
                     .body(Map.of("message", "Error al crear la clase: " + e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.internalServerError() 
+            return ResponseEntity.internalServerError()
                     .body(Map.of("message", "Error interno del servidor"));
         }
     }
 
     @PutMapping("/admin/classes/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ClassEntity> updateClass(@PathVariable Long id,
-            @Valid @RequestBody ClassEntity classDetails) {
-        Optional<ClassEntity> optionalClass = classRepository.findById(id);
-
-        if (optionalClass.isPresent()) {
-            ClassEntity classEntity = optionalClass.get();
-            classEntity.setName(classDetails.getName());
-            classEntity.setDescription(classDetails.getDescription());
-            classEntity.setPrice(classDetails.getPrice());
-            classEntity.setDuration(classDetails.getDuration());
-            classEntity.setMaxCapacity(classDetails.getMaxCapacity());
-            classEntity.setLevel(classDetails.getLevel());
-            classEntity.setStatus(classDetails.getStatus());
-
-            // Manejar correctamente la asignación del instructor
-            if (classDetails.getInstructor() != null && classDetails.getInstructor().getId() != null) {
-                Optional<User> instructor = userRepository.findById(classDetails.getInstructor().getId());
-                if (instructor.isPresent()) {
-                    classEntity.setInstructor(instructor.get());
-                } else {
-                    return ResponseEntity.badRequest().build();
-                }
-            } else {
-                classEntity.setInstructor(null); // Remover instructor si no se especifica
+    public ResponseEntity<?> updateClass(@PathVariable Long id,
+            @Valid @RequestBody CreateClassRequest request) {
+        try {
+            // 1. Buscar clase existente
+            Optional<ClassEntity> optionalClass = classRepository.findById(id);
+            if (optionalClass.isEmpty()) {
+                return ResponseEntity.notFound().build();
             }
 
-            classEntity.setMaterials(classDetails.getMaterials());
-            classEntity.setRequirements(classDetails.getRequirements());
+            // 2. Buscar y validar el tallerista
+            User teacher = userService.findById(request.getTeacherId());
+            if (teacher.getRole() != User.Role.TEACHER) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("message", "El usuario seleccionado no es un profesor"));
+            }
 
+            // 3. Mapear campos del request a Classentity
+            ClassEntity classEntity = optionalClass.get();
+            classEntity.setName(request.getName());
+            classEntity.setDescription(request.getDescription());
+            classEntity.setPrice(request.getPrice());
+            classEntity.setDuration(request.getDuration());
+            classEntity.setDayOfWeek(request.getDayOfWeek());
+            classEntity.setStartTime(request.getStartTime());
+            classEntity.setEndTime(request.getEndTime());
+            classEntity.setMaxCapacity(request.getMaxCapacity());
+            classEntity.setLevel(request.getLevel());
+            classEntity.setMaterials(request.getMaterials());
+            classEntity.setRequirements(request.getRequirements());
+            classEntity.setInstructor(teacher);
+
+            // 4. Guardar cambios
             ClassEntity updatedClass = classRepository.save(classEntity);
             return ResponseEntity.ok(updatedClass);
-        } else {
-            return ResponseEntity.notFound().build();
+
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "Error al actualizar la clase: " + e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("message", "Error interno del servidor"));
         }
     }
 
