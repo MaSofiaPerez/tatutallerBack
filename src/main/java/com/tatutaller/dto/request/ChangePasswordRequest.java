@@ -4,7 +4,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 public class ChangePasswordRequest {
-    // Current password is optional for users who must change password (first time login)
+    // Current password is optional for users who must change password (first time
+    // login)
     private String currentPassword;
 
     @NotBlank(message = "La nueva contraseña es obligatoria")
