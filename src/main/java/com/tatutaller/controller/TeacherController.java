@@ -120,7 +120,7 @@ public class TeacherController {
                             booking.getClassEntity().getName(),
                             teacher.getName(),
                             booking.getBookingDate().toString(),
-                            booking.getBookingTime().toString());
+                            booking.getStartTime().toString() + " - " + booking.getEndTime().toString());
                 } else if (newStatus == Booking.BookingStatus.CANCELLED) {
                     // Reserva cancelada
                     String reason = request.get("reason");
