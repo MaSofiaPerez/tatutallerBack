@@ -33,7 +33,7 @@ public class BookingService {
                 .orElseThrow(() -> new NoSuchElementException("Clase no encontrada"));
 
         // Validar que el horario esté dentro del horario de clase
-        if (request.getStarTime().isBefore(classEntity.getStartTime()) ||
+        if (request.getStartTime().isBefore(classEntity.getStartTime()) ||
                 request.getEndTime().isAfter(classEntity.getEndTime())) {
             throw new IllegalArgumentException("El horario de la reserva debe estar dentro del horario de la clase");
         }
@@ -44,14 +44,14 @@ public class BookingService {
             java.time.LocalDate end = request.getRecurrenceEndDate();
             java.util.List<Booking> bookings = new java.util.ArrayList<>();
             while (!current.isAfter(end)) {
-                if (!isSlotAvailable(classEntity, current, request.getStarTime(), request.getEndTime())) {
+                if (!isSlotAvailable(classEntity, current, request.getStartTime(), request.getEndTime())) {
                     throw new IllegalArgumentException("No hay cupo disponible para la clase en la fecha " + current);
                 }
                 Booking booking = new Booking();
                 booking.setUser(user);
                 booking.setClassEntity(classEntity);
                 booking.setBookingDate(current);
-                booking.setStartTime(request.getStarTime());
+                booking.setStartTime(request.getStartTime());
                 booking.setEndTime(request.getEndTime());
                 booking.setType(Booking.BookingType.RECURRENTE);
                 booking.setNotes(request.getNotes());
@@ -64,7 +64,7 @@ public class BookingService {
         }
 
         // Validar cupo y solapamiento para reserva puntual
-        if (!isSlotAvailable(classEntity, request.getBookingDate(), request.getStarTime(), request.getEndTime())) {
+        if (!isSlotAvailable(classEntity, request.getBookingDate(), request.getStartTime(), request.getEndTime())) {
             throw new IllegalArgumentException("No hay cupo disponible para la clase en el horario solicitado");
         }
 
@@ -73,7 +73,7 @@ public class BookingService {
         booking.setUser(user);
         booking.setClassEntity(classEntity);
         booking.setBookingDate(request.getBookingDate());
-        booking.setStartTime(request.getStarTime());
+        booking.setStartTime(request.getStartTime());
         booking.setEndTime(request.getEndTime());
         booking.setType(Booking.BookingType.valueOf(request.getBookingType()));
         booking.setNotes(request.getNotes());

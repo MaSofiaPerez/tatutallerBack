@@ -12,7 +12,7 @@ public class BookingRequest {
     private LocalDate bookingDate;
 
     @NotNull(message = "La hora de inicio es obligatoria")
-    private LocalTime starTime;
+    private LocalTime startTime;
 
     @NotNull(message = "La hora de fin es obligatoria")
     private LocalTime endTime;
@@ -40,12 +40,12 @@ public class BookingRequest {
         return bookingDate;
     }
 
-    public LocalTime getStarTime() {
-        return starTime;
+    public LocalTime getStartTime() {
+        return startTime;
     }
 
-    public void setStarTime(LocalTime starTime) {
-        this.starTime = starTime;
+    public void setStartTime(LocalTime startTime) {
+        this.startTime = startTime;
     }
 
     public LocalTime getEndTime() {
