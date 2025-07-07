@@ -7,6 +7,7 @@ import com.tatutaller.repository.UserRepository;
 import com.tatutaller.service.UserService;
 import com.tatutaller.dto.request.CreateClassRequest;
 import com.tatutaller.dto.response.PublicClassResponse;
+import com.tatutaller.dto.response.ClassResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -67,6 +68,45 @@ public class ClassController {
                 classEntity.getInstructor() != null ? classEntity.getInstructor().getName() : null,
                 classEntity.getMaterials(),
                 classEntity.getRequirements());
+    }
+
+    // Endpoint público para obtener clases (formato para grilla)
+    @GetMapping("/public/classes-grid")
+    public ResponseEntity<List<ClassResponse>> getAllClassesForGrid() {
+        List<ClassEntity> classes = classRepository.findActiveClasses();
+        List<ClassResponse> classResponses = classes.stream()
+                .map(this::convertToClassResponse)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(classResponses);
+    }
+
+    private ClassResponse convertToClassResponse(ClassEntity classEntity) {
+        // Mapear dayOfWeek enum a string legible
+        String weekDay = classEntity.getDayOfWeek() != null ? getSpanishDayName(classEntity.getDayOfWeek().toString())
+                : null;
+        String instructorName = classEntity.getInstructor() != null ? classEntity.getInstructor().getName() : null;
+        return new ClassResponse(
+                classEntity.getId(),
+                classEntity.getName(),
+                weekDay,
+                instructorName,
+                classEntity.getStartTime(),
+                classEntity.getEndTime(), // ahora se envía endTime
+                classEntity.getDuration() // String para mostrar "3 horas"
+        );
+    }
+
+    private String getSpanishDayName(String dayOfWeek) {
+        return switch (dayOfWeek.toUpperCase()) {
+            case "MONDAY" -> "Lunes";
+            case "TUESDAY" -> "Martes";
+            case "WEDNESDAY" -> "Miércoles";
+            case "THURSDAY" -> "Jueves";
+            case "FRIDAY" -> "Viernes";
+            case "SATURDAY" -> "Sábado";
+            case "SUNDAY" -> "Domingo";
+            default -> dayOfWeek;
+        };
     }
 
     // Endpoints administrativos

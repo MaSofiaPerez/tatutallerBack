@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Map;
 import java.util.HashMap;
+import com.tatutaller.dto.response.BookingResponse;
+import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -38,6 +40,23 @@ public class BookingController {
 
     @Autowired
     private EmailService emailService;
+
+    // Método utilitario para mapear Booking a BookingResponse
+    private BookingResponse toBookingResponse(Booking booking) {
+        return new BookingResponse(
+                booking.getId(),
+                booking.getClassEntity().getId(),
+                booking.getClassEntity().getName(),
+                booking.getClassEntity().getInstructor() != null ? booking.getClassEntity().getInstructor().getName()
+                        : null,
+                booking.getBookingDate(),
+                booking.getStartTime(),
+                booking.getEndTime(),
+                booking.getStatus() != null ? booking.getStatus().name() : null,
+                booking.getNotes(),
+                booking.getUser() != null ? booking.getUser().getName() : null,
+                booking.getUser() != null ? booking.getUser().getEmail() : null);
+    }
 
     // Endpoint para crear reserva (usuario autenticado)
     @PostMapping("/bookings")
@@ -57,7 +76,8 @@ public class BookingController {
                     booking.setUser(user.get());
                     booking.setClassEntity(classEntity.get());
                     booking.setBookingDate(bookingRequest.getBookingDate());
-                    booking.setBookingTime(bookingRequest.getBookingTime());
+                    booking.setStartTime(bookingRequest.getStartTime());
+                    booking.setEndTime(bookingRequest.getEndTime());
                     booking.setNotes(bookingRequest.getNotes());
                     booking.setStatus(Booking.BookingStatus.PENDING);
 
@@ -72,14 +92,14 @@ public class BookingController {
                                     user.get().getName(),
                                     classEntity.get().getName(),
                                     booking.getBookingDate().toString(),
-                                    booking.getBookingTime().toString());
+                                    booking.getStartTime().toString() + " - " + booking.getEndTime().toString());
                         } catch (Exception e) {
                             // Log error but don't fail the booking
                             System.err.println("Error enviando email al profesor: " + e.getMessage());
                         }
                     }
 
-                    return ResponseEntity.ok(savedBooking);
+                    return ResponseEntity.ok(toBookingResponse(savedBooking));
                 } else {
                     Map<String, String> response = new HashMap<>();
                     response.put("message", "Clase no encontrada");
@@ -98,13 +118,15 @@ public class BookingController {
     // Endpoint para obtener reservas del usuario autenticado
     @GetMapping("/my-bookings")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-    public ResponseEntity<List<Booking>> getMyBookings(Authentication authentication) {
+    public ResponseEntity<List<BookingResponse>> getMyBookings(Authentication authentication) {
         UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
         Optional<User> user = userRepository.findByEmail(userPrincipal.getEmail());
 
         if (user.isPresent()) {
             List<Booking> bookings = bookingRepository.findByUser(user.get());
-            return ResponseEntity.ok(bookings);
+            List<BookingResponse> responses = bookings.stream().map(this::toBookingResponse)
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(responses);
         } else {
             return ResponseEntity.notFound().build();
         }
@@ -113,22 +135,23 @@ public class BookingController {
     // Endpoints administrativos
     @GetMapping("/admin/bookings")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<Booking>> getAllBookings() {
+    public ResponseEntity<List<BookingResponse>> getAllBookings() {
         List<Booking> bookings = bookingRepository.findAll();
-        return ResponseEntity.ok(bookings);
+        List<BookingResponse> responses = bookings.stream().map(this::toBookingResponse).collect(Collectors.toList());
+        return ResponseEntity.ok(responses);
     }
 
     @GetMapping("/admin/bookings/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Booking> getBookingById(@PathVariable Long id) {
+    public ResponseEntity<BookingResponse> getBookingById(@PathVariable Long id) {
         Optional<Booking> booking = bookingRepository.findById(id);
-        return booking.map(ResponseEntity::ok)
+        return booking.map(b -> ResponseEntity.ok(toBookingResponse(b)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/admin/bookings/{id}/status")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Booking> updateBookingStatus(@PathVariable Long id,
+    public ResponseEntity<BookingResponse> updateBookingStatus(@PathVariable Long id,
             @RequestBody Map<String, String> statusUpdate) {
         Optional<Booking> optionalBooking = bookingRepository.findById(id);
 
@@ -140,7 +163,7 @@ public class BookingController {
                 Booking.BookingStatus status = Booking.BookingStatus.valueOf(newStatus.toUpperCase());
                 booking.setStatus(status);
                 Booking updatedBooking = bookingRepository.save(booking);
-                return ResponseEntity.ok(updatedBooking);
+                return ResponseEntity.ok(toBookingResponse(updatedBooking));
             } catch (IllegalArgumentException e) {
                 return ResponseEntity.badRequest().build();
             }
@@ -174,12 +197,13 @@ public class BookingController {
             System.out.println("👨‍🎓 Nombre del estudiante: " + request.getStudentName());
 
             // No verificar que la reserva existe para evitar problemas de DB
-            // Optional<Booking> booking = bookingRepository.findById(request.getBookingId());
+            // Optional<Booking> booking =
+            // bookingRepository.findById(request.getBookingId());
             // if (!booking.isPresent()) {
-            //     response.put("success", false);
-            //     response.put("error", "Reserva no encontrada");
-            //     response.put("bookingId", request.getBookingId());
-            //     return ResponseEntity.status(404).body(response);
+            // response.put("success", false);
+            // response.put("error", "Reserva no encontrada");
+            // response.put("bookingId", request.getBookingId());
+            // return ResponseEntity.status(404).body(response);
             // }
 
             // Intentar enviar notificación al profesor
@@ -191,7 +215,7 @@ public class BookingController {
                         request.getClassName(),
                         request.getBookingDate(),
                         request.getBookingTime());
-                
+
                 System.out.println("✅ Email enviado exitosamente");
             } catch (Exception emailError) {
                 System.err.println("⚠️ Error enviando email (continuando sin fallar): " + emailError.getMessage());
@@ -228,17 +252,17 @@ public class BookingController {
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<Map<String, Object>> notifyTeacherTest(@RequestBody Map<String, Object> request) {
         Map<String, Object> response = new HashMap<>();
-        
+
         try {
             System.out.println("🔔 Test endpoint recibido: " + request);
-            
+
             response.put("success", true);
             response.put("message", "Endpoint de notificación funcionando correctamente");
             response.put("receivedData", request);
             response.put("timestamp", java.time.LocalDateTime.now().toString());
-            
+
             return ResponseEntity.ok(response);
-            
+
         } catch (Exception e) {
             System.err.println("❌ Error en test endpoint: " + e.getMessage());
             response.put("success", false);
@@ -251,13 +275,13 @@ public class BookingController {
     @PostMapping("/public/test-notification")
     public ResponseEntity<Map<String, Object>> testNotificationPublic() {
         Map<String, Object> response = new HashMap<>();
-        
+
         response.put("success", true);
         response.put("message", "El backend está funcionando correctamente");
         response.put("endpoint", "/api/bookings/notify-teacher");
         response.put("status", "disponible");
         response.put("timestamp", java.time.LocalDateTime.now().toString());
-        
+
         return ResponseEntity.ok(response);
     }
 }

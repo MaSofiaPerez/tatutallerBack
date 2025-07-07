@@ -1,6 +1,7 @@
 package com.tatutaller.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotNull;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -31,12 +32,19 @@ public class Booking {
     @Column(name = "booking_date")
     private LocalDate bookingDate;
 
-    @NotNull(message = "La hora es obligatoria")
+    @NotNull(message = "La hora inicio es obligatoria")
     @Column(name = "booking_time")
-    private LocalTime bookingTime;
+    private LocalTime startTime;
+
+    @NotNull(message = "La hora de fin es obligatoria")
+    @Column(name = "booking_time_end")
+    private LocalTime endTime;
 
     @Enumerated(EnumType.STRING)
     private BookingStatus status = BookingStatus.PENDING;
+
+    @Enumerated(EnumType.STRING)
+    private BookingType type;
 
     private String notes; // Notas adicionales del cliente
     private String adminNotes; // Notas del administrador
@@ -47,19 +55,29 @@ public class Booking {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    private LocalDate recurrenceEndDate;
+    private String recurrencePattern;
+
     public enum BookingStatus {
-        PENDING, CONFIRMED, CANCELLED, COMPLETED
+        PENDING, CONFIRMED, REJECTED, CANCELLED, COMPLETED
+    }
+
+    public enum BookingType {
+        PUNTUAL, RECURRENTE
     }
 
     // Constructors
     public Booking() {
     }
 
-    public Booking(User user, ClassEntity classEntity, LocalDate bookingDate, LocalTime bookingTime) {
+    public Booking(User user, ClassEntity classEntity, LocalDate bookingDate, LocalTime starTime, LocalTime endTime,
+            BookingType type) {
         this.user = user;
         this.classEntity = classEntity;
         this.bookingDate = bookingDate;
-        this.bookingTime = bookingTime;
+        this.startTime = starTime;
+        this.endTime = endTime;
+        this.type = type;
     }
 
     // Lifecycle methods
@@ -120,12 +138,44 @@ public class Booking {
         this.bookingDate = bookingDate;
     }
 
-    public LocalTime getBookingTime() {
-        return bookingTime;
+    public LocalTime getStartTime() {
+        return startTime;
     }
 
-    public void setBookingTime(LocalTime bookingTime) {
-        this.bookingTime = bookingTime;
+    public void setStartTime(LocalTime startTime) {
+        this.startTime = startTime;
+    }
+
+    public LocalTime getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(LocalTime endTime) {
+        this.endTime = endTime;
+    }
+
+    public BookingType getType() {
+        return type;
+    }
+
+    public void setType(BookingType type) {
+        this.type = type;
+    }
+
+    public LocalDate getRecurrenceEndDate() {
+        return recurrenceEndDate;
+    }
+
+    public void setRecurrenceEndDate(LocalDate recurrenceEndDate) {
+        this.recurrenceEndDate = recurrenceEndDate;
+    }
+
+    public String getRecurrencePattern() {
+        return recurrencePattern;
+    }
+
+    public void setRecurrencePattern(String recurrencePattern) {
+        this.recurrencePattern = recurrencePattern;
     }
 
     public BookingStatus getStatus() {
@@ -166,5 +216,19 @@ public class Booking {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    @AssertTrue(message = "La hora de fin debe ser posterior a la de inicio")
+    public boolean isTimeRangeValid() {
+        return startTime != null && endTime != null && endTime.isAfter(startTime);
+    }
+
+    @AssertTrue(message = "La duración máxima de una reserva es de 2 horas")
+    public boolean isMaxDurationValid() {
+        if (startTime == null || endTime == null) {
+            return true;
+        }
+        long duration = java.time.Duration.between(startTime, endTime).toHours();
+        return duration <= 2;
     }
 }
