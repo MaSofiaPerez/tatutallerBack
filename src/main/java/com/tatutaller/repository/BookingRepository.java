@@ -9,77 +9,77 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
-    List<Booking> findByUser(User user);
+  List<Booking> findByUser(User user);
 
-    List<Booking> findByClassEntity(ClassEntity classEntity);
+  List<Booking> findByClassEntity(ClassEntity classEntity);
 
-    // Buscar reservas por lista de clases (para profesores)
-    List<Booking> findByClassEntityIn(List<ClassEntity> classes);
+  // Buscar reservas por lista de clases (para profesores)
+  List<Booking> findByClassEntityIn(List<ClassEntity> classes);
 
-    List<Booking> findByStatus(Booking.BookingStatus status);
+  List<Booking> findByStatus(Booking.BookingStatus status);
 
-    List<Booking> findByBookingDate(LocalDate date);
+  List<Booking> findByBookingDate(LocalDate date);
 
-    @Query("SELECT b FROM Booking b WHERE b.bookingDate BETWEEN :startDate AND :endDate")
-    List<Booking> findByDateRange(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+  @Query("SELECT b FROM Booking b WHERE b.bookingDate BETWEEN :startDate AND :endDate")
+  List<Booking> findByDateRange(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
-    @Query("SELECT b FROM Booking b ORDER BY b.createdAt DESC")
-    List<Booking> findRecentBookings();
+  @Query("SELECT b FROM Booking b ORDER BY b.createdAt DESC")
+  List<Booking> findRecentBookings();
 
-    @Query("SELECT COUNT(b) FROM Booking b")
-    long countTotalBookings();
+  @Query("SELECT COUNT(b) FROM Booking b")
+  long countTotalBookings();
 
-    @Query("SELECT COUNT(b) FROM Booking b WHERE b.status = 'CONFIRMED'")
-    long countConfirmedBookings();
+  @Query("SELECT COUNT(b) FROM Booking b WHERE b.status = 'CONFIRMED'")
+  long countConfirmedBookings();
 
-    @Query("SELECT SUM(c.price) FROM Booking b JOIN b.classEntity c WHERE b.status = 'CONFIRMED'")
-    Double calculateTotalRevenue();
+  @Query("SELECT SUM(c.price) FROM Booking b JOIN b.classEntity c WHERE b.status = 'CONFIRMED'")
+  Double calculateTotalRevenue();
 
-    @Query("""
-                SELECT b FROM Booking b
-                WHERE b.classEntity = :classEntity
-                  AND b.bookingDate = :date
-                  AND b.status IN ('PENDING', 'CONFIRMED')
-                  AND (
-                        (b.startTime < :endTime AND b.endTime > :startTime)
-                      )
-            """)
-    List<Booking> findOverlappingBookings(
-            @Param("classEntity") ClassEntity classEntity,
-            @Param("date") LocalDate date,
-            @Param("startTime") java.time.LocalTime startTime,
-            @Param("endTime") java.time.LocalTime endTime);
+  @Query("""
+          SELECT b FROM Booking b
+          WHERE b.classEntity = :classEntity
+            AND b.bookingDate = :date
+            AND b.status IN ('PENDING', 'CONFIRMED')
+            AND (
+                  (b.startTime < :endTime AND b.endTime > :startTime)
+                )
+      """)
+  List<Booking> findOverlappingBookings(
+      @Param("classEntity") ClassEntity classEntity,
+      @Param("date") LocalDate date,
+      @Param("startTime") java.time.LocalTime startTime,
+      @Param("endTime") java.time.LocalTime endTime);
 
-    @Query("""
-        SELECT b.startTime, b.endTime 
-        FROM Booking b 
-        WHERE b.classEntity.id = :classId 
-          AND b.bookingDate = :date 
-          AND b.status IN ('PENDING', 'CONFIRMED')
-        ORDER BY b.startTime
-    """)
-    List<Object[]> getBookedTimeSlots(@Param("classId") Long classId, @Param("date") LocalDate date);
+  @Query("""
+          SELECT b.startTime, b.endTime
+          FROM Booking b
+          WHERE b.classEntity.id = :classId
+            AND b.bookingDate = :date
+            AND b.status IN ('PENDING', 'CONFIRMED')
+          ORDER BY b.startTime
+      """)
+  List<Object[]> getBookedTimeSlots(@Param("classId") Long classId, @Param("date") LocalDate date);
 
-    @Query("SELECT COUNT(b) FROM Booking b WHERE b.classEntity.id = :classId AND b.bookingDate = :date AND b.status IN ('PENDING', 'CONFIRMED')")
-    Long countActiveBookingsByClassAndDate(@Param("classId") Long classId, @Param("date") LocalDate date);
+  @Query("SELECT COUNT(b) FROM Booking b WHERE b.classEntity.id = :classId AND b.bookingDate = :date AND b.status IN ('PENDING', 'CONFIRMED')")
+  Long countActiveBookingsByClassAndDate(@Param("classId") Long classId, @Param("date") LocalDate date);
 
-    @Query("""
-        SELECT COUNT(b) FROM Booking b 
-        WHERE b.classEntity.id = :classId 
-          AND b.bookingDate = :date 
-          AND b.status IN ('PENDING', 'CONFIRMED') 
-          AND b.startTime < :endTime 
-          AND b.endTime > :startTime
-    """)
-    Long countOverlappingBookings(
-        @Param("classId") Long classId, 
-        @Param("date") LocalDate date, 
-        @Param("startTime") LocalTime startTime, 
-        @Param("endTime") LocalTime endTime
-    );
+  @Query("""
+          SELECT COUNT(b) FROM Booking b
+          WHERE b.classEntity.id = :classId
+            AND b.bookingDate = :date
+            AND b.status IN ('PENDING', 'CONFIRMED')
+            AND b.startTime < :endTime
+            AND b.endTime > :startTime
+      """)
+  Long countOverlappingBookings(
+      @Param("classId") Long classId,
+      @Param("date") LocalDate date,
+      @Param("startTime") LocalTime startTime,
+      @Param("endTime") LocalTime endTime);
 }
