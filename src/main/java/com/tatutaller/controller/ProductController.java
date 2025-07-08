@@ -1,13 +1,18 @@
 package com.tatutaller.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tatutaller.dto.request.ProductRequest;
+import com.tatutaller.entity.Image;
 import com.tatutaller.entity.Product;
 import com.tatutaller.repository.ProductRepository;
+import com.tatutaller.service.ImageService;
+
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -17,6 +22,9 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api")
 public class ProductController {
+
+    @Autowired
+    private ImageService imageService;
 
     @Autowired
     private ProductRepository productRepository;
@@ -44,10 +52,15 @@ public class ProductController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping("/admin/products")
+    @PostMapping(value = "/admin/products", consumes = "multipart/form-data")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> createProduct(@Valid @RequestBody ProductRequest request) {
+    public ResponseEntity<?> createProduct(
+            @RequestPart("product") String productJson,
+            @RequestPart(value = "file", required = false) MultipartFile file) {
         try {
+            ObjectMapper mapper = new ObjectMapper();
+            ProductRequest request = mapper.readValue(productJson, ProductRequest.class);
+
             Product product = new Product(
                 request.getName(),
                 request.getDescription(),
@@ -55,7 +68,16 @@ public class ProductController {
                 request.getStock()
             );
 
-            product.setImageUrl(request.getImageUrl());
+            // If file is present, save it and set the imageUrl
+            if (file != null && !file.isEmpty()) {
+                Image image = imageService.save(file);
+                if (image != null && image.getId() != null) {
+                    product.setImageUrl("/imagenes/" + image.getId());
+                }
+            } else {
+                product.setImageUrl(request.getImageUrl());
+            }
+
             product.setCategory(request.getCategory());
             product.setStatus(request.getStatus());
 
@@ -63,29 +85,44 @@ public class ProductController {
             return ResponseEntity.ok(savedProduct);
 
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Error al crear el producto", "error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("message", "Error creating product", "error", e.getMessage()));
         }
     }
 
-    @PutMapping("/admin/products/{id}")
+    @PutMapping(value = "/admin/products/{id}", consumes = "multipart/form-data")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> updateProduct(@PathVariable Long id, @Valid @RequestBody ProductRequest request) {
+    public ResponseEntity<?> updateProduct(
+            @PathVariable Long id,
+            @RequestPart("product") String productJson,
+            @RequestPart(value = "file", required = false) MultipartFile file) {
         try {
+            ObjectMapper mapper = new ObjectMapper();
+            ProductRequest request = mapper.readValue(productJson, ProductRequest.class);
+
             Optional<Product> productOpt = productRepository.findById(id);
             if (!productOpt.isPresent()) {
                 return ResponseEntity.notFound().build();
             }
 
             Product product = productOpt.get();
-            
+
             // Actualizar campos
             product.setName(request.getName());
             product.setDescription(request.getDescription());
             product.setPrice(request.getPrice());
             product.setStock(request.getStock());
-            product.setImageUrl(request.getImageUrl());
             product.setCategory(request.getCategory());
             product.setStatus(request.getStatus());
+
+            // Si viene archivo, guardar imagen y actualizar URL
+            if (file != null && !file.isEmpty()) {
+                Image image = imageService.save(file);
+                if (image != null && image.getId() != null) {
+                    product.setImageUrl("/imagenes/" + image.getId());
+                }
+            } else {
+                product.setImageUrl(request.getImageUrl());
+            }
 
             Product updatedProduct = productRepository.save(product);
             return ResponseEntity.ok(updatedProduct);
