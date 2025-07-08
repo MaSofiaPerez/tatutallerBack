@@ -13,6 +13,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
+import java.time.LocalTime;
 
 @Component
 @Profile("!test")
@@ -125,6 +127,9 @@ public class DataLoader implements CommandLineRunner {
             class1.setInstructor(teacher1);
             class1.setMaterials("Arcilla, herramientas básicas, esmaltes");
             class1.setRequirements("Ninguno - apto para principiantes");
+            class1.setDayOfWeek(DayOfWeek.MONDAY);
+            class1.setStartTime(LocalTime.of(10, 0));
+            class1.setEndTime(LocalTime.of(13, 0));
             classRepository.save(class1);
 
             ClassEntity class2 = new ClassEntity();
@@ -138,6 +143,9 @@ public class DataLoader implements CommandLineRunner {
             class2.setInstructor(teacher2);
             class2.setMaterials("Piezas biscocho, esmaltes variados, pinceles");
             class2.setRequirements("Conocimientos básicos de cerámica");
+            class2.setDayOfWeek(DayOfWeek.WEDNESDAY);
+            class2.setStartTime(LocalTime.of(14, 0));
+            class2.setEndTime(LocalTime.of(18, 0));
             classRepository.save(class2);
 
             ClassEntity class3 = new ClassEntity();
@@ -151,6 +159,9 @@ public class DataLoader implements CommandLineRunner {
             class3.setInstructor(teacher1);
             class3.setMaterials("Arcilla preparada, acceso a torno, herramientas especializadas");
             class3.setRequirements("Experiencia previa con torno cerámico");
+            class3.setDayOfWeek(DayOfWeek.FRIDAY);
+            class3.setStartTime(LocalTime.of(16, 0));
+            class3.setEndTime(LocalTime.of(21, 0));
             classRepository.save(class3);
         }
     }
