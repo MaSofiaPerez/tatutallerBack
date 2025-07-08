@@ -55,6 +55,7 @@ public class BookingController {
                 booking.getEndTime(),
                 booking.getStatus() != null ? booking.getStatus().name() : null,
                 booking.getNotes(),
+                booking.getClassEntity().getMaxCapacity(),
                 booking.getUser() != null ? booking.getUser().getName() : null,
                 booking.getUser() != null ? booking.getUser().getEmail() : null);
     }
@@ -71,34 +72,33 @@ public class BookingController {
             if (user.isPresent()) {
                 Optional<ClassEntity> classEntity = classRepository.findById(bookingRequest.getClassId());
                 if (classEntity.isPresent()) {
-                    
+
                     // VALIDAR CUPO MÁXIMO
                     if (classEntity.get().getMaxCapacity() != null) {
                         Long overlappingBookings = bookingRepository.countOverlappingBookings(
-                            bookingRequest.getClassId(),
-                            bookingRequest.getBookingDate(),
-                            bookingRequest.getStartTime(),
-                            bookingRequest.getEndTime()
-                        );
-                        
+                                bookingRequest.getClassId(),
+                                bookingRequest.getBookingDate(),
+                                bookingRequest.getStartTime(),
+                                bookingRequest.getEndTime());
+
                         if (overlappingBookings >= classEntity.get().getMaxCapacity()) {
                             Map<String, Object> response = new HashMap<>();
                             response.put("success", false);
                             response.put("error", "No hay cupos disponibles para este horario");
-                            response.put("message", "El cupo máximo para esta clase es de " + classEntity.get().getMaxCapacity() + " personas");
+                            response.put("message", "El cupo máximo para esta clase es de "
+                                    + classEntity.get().getMaxCapacity() + " personas");
                             response.put("currentBookings", overlappingBookings);
                             return ResponseEntity.status(409).body(response);
                         }
                     }
-                    
+
                     // VALIDAR SOLAPAMIENTO DE HORARIOS
                     List<Booking> overlappingBookings = bookingRepository.findOverlappingBookings(
-                        classEntity.get(),
-                        bookingRequest.getBookingDate(),
-                        bookingRequest.getStartTime(),
-                        bookingRequest.getEndTime()
-                    );
-                    
+                            classEntity.get(),
+                            bookingRequest.getBookingDate(),
+                            bookingRequest.getStartTime(),
+                            bookingRequest.getEndTime());
+
                     if (!overlappingBookings.isEmpty()) {
                         Map<String, Object> response = new HashMap<>();
                         response.put("success", false);
@@ -106,7 +106,7 @@ public class BookingController {
                         response.put("message", "Por favor, selecciona un horario diferente");
                         return ResponseEntity.status(409).body(response);
                     }
-                    
+
                     // Crear la reserva si pasa todas las validaciones
                     Booking booking = new Booking();
                     booking.setUser(user.get());
@@ -125,25 +125,25 @@ public class BookingController {
                     }
 
                     Booking savedBooking = bookingRepository.save(booking);
-                    
+
                     // Enviar email al profesor
                     if (classEntity.get().getInstructor() != null) {
                         try {
                             emailService.sendBookingNotificationToTeacher(
-                                classEntity.get().getInstructor().getEmail(),
-                                classEntity.get().getInstructor().getName(),
-                                user.get().getName(),
-                                classEntity.get().getName(),
-                                bookingRequest.getBookingDate().toString(),
-                                bookingRequest.getStartTime().toString() + " - " + bookingRequest.getEndTime().toString()
-                            );
+                                    classEntity.get().getInstructor().getEmail(),
+                                    classEntity.get().getInstructor().getName(),
+                                    user.get().getName(),
+                                    classEntity.get().getName(),
+                                    bookingRequest.getBookingDate().toString(),
+                                    bookingRequest.getStartTime().toString() + " - "
+                                            + bookingRequest.getEndTime().toString());
                         } catch (Exception e) {
                             System.err.println("Error enviando email al profesor: " + e.getMessage());
                         }
                     }
 
                     return ResponseEntity.ok(toBookingResponse(savedBooking));
-                    
+
                 } else {
                     Map<String, String> response = new HashMap<>();
                     response.put("error", "Clase no encontrada");

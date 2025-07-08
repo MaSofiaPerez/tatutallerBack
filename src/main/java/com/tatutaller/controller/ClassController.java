@@ -292,24 +292,28 @@ public class ClassController {
 
         while (current.plusHours(2).isBefore(classEnd) || current.plusHours(2).equals(classEnd)) {
             LocalTime slotEnd = current.plusHours(2);
+            
+            // Crear variable final para usar en lambda
+            final LocalTime currentSlotStart = current;
+            final LocalTime currentSlotEnd = slotEnd;
 
             // Verificar si este slot de 2 horas NO se solapa con reservas existentes
             boolean isAvailable = bookedSlots.stream()
                 .noneMatch(slot -> {
                     LocalTime bookedStart = (LocalTime) slot[0];
                     LocalTime bookedEnd = (LocalTime) slot[1];
-                    return current.isBefore(bookedEnd) && slotEnd.isAfter(bookedStart);
+                    return currentSlotStart.isBefore(bookedEnd) && currentSlotEnd.isAfter(bookedStart);
                 });
 
             // Verificar cupo máximo para este slot
             if (isAvailable && classEntity.getMaxCapacity() != null) {
                 Long overlappingBookings = bookingRepository.countOverlappingBookings(
-                    classEntity.getId(), date, current, slotEnd
+                    classEntity.getId(), date, currentSlotStart, currentSlotEnd
                 );
                 isAvailable = overlappingBookings < classEntity.getMaxCapacity();
             }
 
-            slots.add(new TimeSlotResponse(current, slotEnd, isAvailable));
+            slots.add(new TimeSlotResponse(currentSlotStart, currentSlotEnd, isAvailable));
             current = current.plusMinutes(30);
         }
 
