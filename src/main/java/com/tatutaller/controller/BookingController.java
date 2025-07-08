@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.HashMap;
 import com.tatutaller.dto.response.BookingResponse;
 import java.util.stream.Collectors;
+import java.time.LocalDateTime;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -68,50 +69,95 @@ public class BookingController {
             Optional<User> user = userRepository.findByEmail(userPrincipal.getEmail());
 
             if (user.isPresent()) {
-                // Verificar que la clase existe
                 Optional<ClassEntity> classEntity = classRepository.findById(bookingRequest.getClassId());
                 if (classEntity.isPresent()) {
-                    // Crear la reserva con los datos del DTO
+                    
+                    // VALIDAR CUPO MÁXIMO
+                    if (classEntity.get().getMaxCapacity() != null) {
+                        Long overlappingBookings = bookingRepository.countOverlappingBookings(
+                            bookingRequest.getClassId(),
+                            bookingRequest.getBookingDate(),
+                            bookingRequest.getStartTime(),
+                            bookingRequest.getEndTime()
+                        );
+                        
+                        if (overlappingBookings >= classEntity.get().getMaxCapacity()) {
+                            Map<String, Object> response = new HashMap<>();
+                            response.put("success", false);
+                            response.put("error", "No hay cupos disponibles para este horario");
+                            response.put("message", "El cupo máximo para esta clase es de " + classEntity.get().getMaxCapacity() + " personas");
+                            response.put("currentBookings", overlappingBookings);
+                            return ResponseEntity.status(409).body(response);
+                        }
+                    }
+                    
+                    // VALIDAR SOLAPAMIENTO DE HORARIOS
+                    List<Booking> overlappingBookings = bookingRepository.findOverlappingBookings(
+                        classEntity.get(),
+                        bookingRequest.getBookingDate(),
+                        bookingRequest.getStartTime(),
+                        bookingRequest.getEndTime()
+                    );
+                    
+                    if (!overlappingBookings.isEmpty()) {
+                        Map<String, Object> response = new HashMap<>();
+                        response.put("success", false);
+                        response.put("error", "Ya existe una reserva en este horario");
+                        response.put("message", "Por favor, selecciona un horario diferente");
+                        return ResponseEntity.status(409).body(response);
+                    }
+                    
+                    // Crear la reserva si pasa todas las validaciones
                     Booking booking = new Booking();
                     booking.setUser(user.get());
                     booking.setClassEntity(classEntity.get());
                     booking.setBookingDate(bookingRequest.getBookingDate());
                     booking.setStartTime(bookingRequest.getStartTime());
                     booking.setEndTime(bookingRequest.getEndTime());
-                    booking.setNotes(bookingRequest.getNotes());
                     booking.setStatus(Booking.BookingStatus.PENDING);
+                    booking.setNotes(bookingRequest.getNotes());
+                    booking.setType(Booking.BookingType.valueOf(bookingRequest.getBookingType()));
+                    booking.setCreatedAt(LocalDateTime.now());
+                    booking.setUpdatedAt(LocalDateTime.now());
+
+                    if (bookingRequest.getBookingType().equals("RECURRENTE")) {
+                        booking.setRecurrenceEndDate(bookingRequest.getRecurrenceEndDate());
+                    }
 
                     Booking savedBooking = bookingRepository.save(booking);
-
+                    
                     // Enviar email al profesor
                     if (classEntity.get().getInstructor() != null) {
                         try {
                             emailService.sendBookingNotificationToTeacher(
-                                    classEntity.get().getInstructor().getEmail(),
-                                    classEntity.get().getInstructor().getName(),
-                                    user.get().getName(),
-                                    classEntity.get().getName(),
-                                    booking.getBookingDate().toString(),
-                                    booking.getStartTime().toString() + " - " + booking.getEndTime().toString());
+                                classEntity.get().getInstructor().getEmail(),
+                                classEntity.get().getInstructor().getName(),
+                                user.get().getName(),
+                                classEntity.get().getName(),
+                                bookingRequest.getBookingDate().toString(),
+                                bookingRequest.getStartTime().toString() + " - " + bookingRequest.getEndTime().toString()
+                            );
                         } catch (Exception e) {
-                            // Log error but don't fail the booking
                             System.err.println("Error enviando email al profesor: " + e.getMessage());
                         }
                     }
 
                     return ResponseEntity.ok(toBookingResponse(savedBooking));
+                    
                 } else {
                     Map<String, String> response = new HashMap<>();
-                    response.put("message", "Clase no encontrada");
+                    response.put("error", "Clase no encontrada");
                     return ResponseEntity.badRequest().body(response);
                 }
             } else {
-                return ResponseEntity.notFound().build();
+                Map<String, String> response = new HashMap<>();
+                response.put("error", "Usuario no encontrado");
+                return ResponseEntity.badRequest().body(response);
             }
         } catch (Exception e) {
             Map<String, String> response = new HashMap<>();
-            response.put("message", "Error al crear reserva: " + e.getMessage());
-            return ResponseEntity.internalServerError().body(response);
+            response.put("error", "Error interno del servidor: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
         }
     }
 
