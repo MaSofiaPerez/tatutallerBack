@@ -4,16 +4,21 @@ import com.tatutaller.entity.ClassEntity;
 import com.tatutaller.entity.User;
 import com.tatutaller.repository.ClassRepository;
 import com.tatutaller.repository.UserRepository;
+import com.tatutaller.repository.BookingRepository;
 import com.tatutaller.service.UserService;
 import com.tatutaller.dto.request.CreateClassRequest;
 import com.tatutaller.dto.response.PublicClassResponse;
 import com.tatutaller.dto.response.ClassResponse;
+import com.tatutaller.dto.response.TimeSlotResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +38,9 @@ public class ClassController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private BookingRepository bookingRepository;
 
     // Endpoint público para obtener clases
     @GetMapping("/public/classes")
@@ -246,5 +254,65 @@ public class ClassController {
         } else {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @GetMapping("/public/classes/{id}/available-slots")
+    public ResponseEntity<List<TimeSlotResponse>> getAvailableSlots(
+            @PathVariable Long id,
+            @RequestParam String date) {
+
+        try {
+            Optional<ClassEntity> classEntity = classRepository.findById(id);
+            if (!classEntity.isPresent()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            LocalDate bookingDate = LocalDate.parse(date);
+            List<TimeSlotResponse> availableSlots = calculateAvailableSlots(classEntity.get(), bookingDate);
+
+            return ResponseEntity.ok(availableSlots);
+
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    private List<TimeSlotResponse> calculateAvailableSlots(ClassEntity classEntity, LocalDate date) {
+        List<TimeSlotResponse> slots = new ArrayList<>();
+
+        // Obtener horarios de la clase
+        LocalTime classStart = classEntity.getStartTime();
+        LocalTime classEnd = classEntity.getEndTime();
+
+        // Obtener slots ya ocupados
+        List<Object[]> bookedSlots = bookingRepository.getBookedTimeSlots(classEntity.getId(), date);
+
+        // Generar slots cada 30 minutos para bloques de 2 horas
+        LocalTime current = classStart;
+
+        while (current.plusHours(2).isBefore(classEnd) || current.plusHours(2).equals(classEnd)) {
+            LocalTime slotEnd = current.plusHours(2);
+
+            // Verificar si este slot de 2 horas NO se solapa con reservas existentes
+            boolean isAvailable = bookedSlots.stream()
+                .noneMatch(slot -> {
+                    LocalTime bookedStart = (LocalTime) slot[0];
+                    LocalTime bookedEnd = (LocalTime) slot[1];
+                    return current.isBefore(bookedEnd) && slotEnd.isAfter(bookedStart);
+                });
+
+            // Verificar cupo máximo para este slot
+            if (isAvailable && classEntity.getMaxCapacity() != null) {
+                Long overlappingBookings = bookingRepository.countOverlappingBookings(
+                    classEntity.getId(), date, current, slotEnd
+                );
+                isAvailable = overlappingBookings < classEntity.getMaxCapacity();
+            }
+
+            slots.add(new TimeSlotResponse(current, slotEnd, isAvailable));
+            current = current.plusMinutes(30);
+        }
+
+        return slots;
     }
 }
