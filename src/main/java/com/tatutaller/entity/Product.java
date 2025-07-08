@@ -49,10 +49,9 @@ public class Product {
     private LocalDateTime updatedAt;
 
     public enum ProductCategory {
-        CERAMICA("Cerámica"),
-        HERRAMIENTAS("Herramientas"),
-        MATERIALES("Materiales"),
-        DECORACION("Decoración"),
+        CERAMICA("Pigmentos"),
+        HERRAMIENTAS("Esmalte"),
+        MATERIALES("Materia Prima"),
         OTROS("Otros");
 
         private final String displayName;
