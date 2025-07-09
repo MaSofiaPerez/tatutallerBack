@@ -30,4 +30,6 @@ public interface ClassRepository extends JpaRepository<ClassEntity, Long> {
 
     @Query("SELECT c, COUNT(b) as bookingCount FROM ClassEntity c LEFT JOIN c.bookings b GROUP BY c ORDER BY bookingCount DESC")
     List<Object[]> findPopularClasses();
+
+    List<ClassEntity> findByInstructorId(Long instructorId);
 }

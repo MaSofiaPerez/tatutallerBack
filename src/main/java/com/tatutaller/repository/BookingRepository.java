@@ -82,4 +82,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
       @Param("date") LocalDate date,
       @Param("startTime") LocalTime startTime,
       @Param("endTime") LocalTime endTime);
+
+  List<Booking> findByClassEntityId(Long classId);
 }

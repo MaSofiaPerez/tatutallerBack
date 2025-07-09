@@ -292,24 +292,23 @@ public class ClassController {
 
         while (current.plusHours(2).isBefore(classEnd) || current.plusHours(2).equals(classEnd)) {
             LocalTime slotEnd = current.plusHours(2);
-            
+
             // Crear variable final para usar en lambda
             final LocalTime currentSlotStart = current;
             final LocalTime currentSlotEnd = slotEnd;
 
             // Verificar si este slot de 2 horas NO se solapa con reservas existentes
             boolean isAvailable = bookedSlots.stream()
-                .noneMatch(slot -> {
-                    LocalTime bookedStart = (LocalTime) slot[0];
-                    LocalTime bookedEnd = (LocalTime) slot[1];
-                    return currentSlotStart.isBefore(bookedEnd) && currentSlotEnd.isAfter(bookedStart);
-                });
+                    .noneMatch(slot -> {
+                        LocalTime bookedStart = (LocalTime) slot[0];
+                        LocalTime bookedEnd = (LocalTime) slot[1];
+                        return currentSlotStart.isBefore(bookedEnd) && currentSlotEnd.isAfter(bookedStart);
+                    });
 
             // Verificar cupo máximo para este slot
             if (isAvailable && classEntity.getMaxCapacity() != null) {
                 Long overlappingBookings = bookingRepository.countOverlappingBookings(
-                    classEntity.getId(), date, currentSlotStart, currentSlotEnd
-                );
+                        classEntity.getId(), date, currentSlotStart, currentSlotEnd);
                 isAvailable = overlappingBookings < classEntity.getMaxCapacity();
             }
 
@@ -318,6 +317,64 @@ public class ClassController {
         }
 
         return slots;
+    }
+
+    // DTO para reservas
+    public static class ReservationDTO {
+        private Long id;
+        private String studentName;
+        private LocalDate date;
+        private LocalTime startTime;
+        private LocalTime endTime;
+
+        public ReservationDTO(Long id, String studentName, LocalDate date, LocalTime startTime, LocalTime endTime) {
+            this.id = id;
+            this.studentName = studentName;
+            this.date = date;
+            this.startTime = startTime;
+            this.endTime = endTime;
+        }
+
+        // Getters y setters
+        public Long getId() {
+            return id;
+        }
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
+        public String getStudentName() {
+            return studentName;
+        }
+
+        public void setStudentName(String studentName) {
+            this.studentName = studentName;
+        }
+
+        public LocalDate getDate() {
+            return date;
+        }
+
+        public void setDate(LocalDate date) {
+            this.date = date;
+        }
+
+        public LocalTime getStartTime() {
+            return startTime;
+        }
+
+        public void setStartTime(LocalTime startTime) {
+            this.startTime = startTime;
+        }
+
+        public LocalTime getEndTime() {
+            return endTime;
+        }
+
+        public void setEndTime(LocalTime endTime) {
+            this.endTime = endTime;
+        }
     }
 
     // Endpoint administrativo para obtener reservas filtradas por ID de profesor
@@ -335,9 +392,16 @@ public class ClassController {
             // Obtener las clases del profesor
             List<ClassEntity> classes = classRepository.findByInstructorId(professorId);
 
-            // Obtener las reservas asociadas a esas clases
-            List<?> reservations = classes.stream()
-                    .flatMap(classEntity -> bookingRepository.findByClassId(classEntity.getId()).stream())
+            // Obtener las reservas asociadas a esas clases y mapearlas a DTOs
+            List<ReservationDTO> reservations = classes.stream()
+                    .flatMap(classEntity -> bookingRepository.findByClassEntityId(classEntity.getId()).stream())
+                    .map(booking -> new ReservationDTO(
+                            booking.getId(),
+                            booking.getUser().getName(),
+                            booking.getBookingDate(),
+                            booking.getStartTime(),
+                            booking.getEndTime()
+                    ))
                     .collect(Collectors.toList());
 
             return ResponseEntity.ok(reservations);
