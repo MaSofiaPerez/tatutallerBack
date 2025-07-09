@@ -319,4 +319,31 @@ public class ClassController {
 
         return slots;
     }
+
+    // Endpoint administrativo para obtener reservas filtradas por ID de profesor
+    @GetMapping("/admin/classes/reservations")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> getReservationsByProfessor(@RequestParam Long professorId) {
+        try {
+            // Verificar si el profesor existe
+            Optional<User> professor = userRepository.findById(professorId);
+            if (professor.isEmpty() || professor.get().getRole() != User.Role.TEACHER) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("message", "El ID proporcionado no corresponde a un profesor válido"));
+            }
+
+            // Obtener las clases del profesor
+            List<ClassEntity> classes = classRepository.findByInstructorId(professorId);
+
+            // Obtener las reservas asociadas a esas clases
+            List<?> reservations = classes.stream()
+                    .flatMap(classEntity -> bookingRepository.findByClassId(classEntity.getId()).stream())
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(reservations);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("message", "Error interno del servidor: " + e.getMessage()));
+        }
+    }
 }
