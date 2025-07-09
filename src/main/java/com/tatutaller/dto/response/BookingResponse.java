@@ -13,10 +13,13 @@ public class BookingResponse {
     private LocalTime endTime;
     private String status;
     private String notes;
+    private int maxCapacity;
     private String userName;
     private String userEmail;
 
-    public BookingResponse(Long id, Long classId, String className, String teacherName, LocalDate bookingDate, LocalTime startTime, LocalTime endTime, String status, String notes, String userName, String userEmail) {
+    public BookingResponse(Long id, Long classId, String className, String teacherName, LocalDate bookingDate,
+            LocalTime startTime, LocalTime endTime, String status, String notes, int maxCapacity, String userName,
+            String userEmail) {
         this.id = id;
         this.classId = classId;
         this.className = className;
@@ -26,19 +29,52 @@ public class BookingResponse {
         this.endTime = endTime;
         this.status = status;
         this.notes = notes;
+        this.maxCapacity = maxCapacity;
         this.userName = userName;
         this.userEmail = userEmail;
     }
 
-    public Long getId() { return id; }
-    public Long getClassId() { return classId; }
-    public String getClassName() { return className; }
-    public String getTeacherName() { return teacherName; }
-    public LocalDate getBookingDate() { return bookingDate; }
-    public LocalTime getStartTime() { return startTime; }
-    public LocalTime getEndTime() { return endTime; }
-    public String getStatus() { return status; }
-    public String getNotes() { return notes; }
-    public String getUserName() { return userName; }
-    public String getUserEmail() { return userEmail; }
+    public Long getId() {
+        return id;
+    }
+
+    public Long getClassId() {
+        return classId;
+    }
+
+    public String getClassName() {
+        return className;
+    }
+
+    public String getTeacherName() {
+        return teacherName;
+    }
+
+    public LocalDate getBookingDate() {
+        return bookingDate;
+    }
+
+    public LocalTime getStartTime() {
+        return startTime;
+    }
+
+    public LocalTime getEndTime() {
+        return endTime;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public String getNotes() {
+        return notes;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public String getUserEmail() {
+        return userEmail;
+    }
 }
