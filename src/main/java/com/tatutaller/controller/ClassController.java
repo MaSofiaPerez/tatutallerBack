@@ -400,8 +400,7 @@ public class ClassController {
                             booking.getUser().getName(),
                             booking.getBookingDate(),
                             booking.getStartTime(),
-                            booking.getEndTime()
-                    ))
+                            booking.getEndTime()))
                     .collect(Collectors.toList());
 
             return ResponseEntity.ok(reservations);
