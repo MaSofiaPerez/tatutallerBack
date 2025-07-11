@@ -64,15 +64,21 @@ public class WebSecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/login", "/api/auth/register", "/api/auth/debug/**").permitAll()
+                        .requestMatchers(
+                            "/api/auth/login",
+                            "/api/auth/register",
+                            "/api/auth/login-google", // <-- Agrega esta línea
+                            "/api/auth/debug/**"
+                        ).permitAll()
                         .requestMatchers("/api/public/**").permitAll()
-                        .requestMatchers("/api/imagenes/**").permitAll() // <-- Agrega esta línea
+                        .requestMatchers("/api/imagenes/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Permitir OPTIONS
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/auth/**").authenticated() // Require authentication for other auth
-                                                                         // endpoints
+
+                        .requestMatchers("/api/auth/**").authenticated()
                         .requestMatchers("/api/auth/verify").permitAll() // Permitir acceso público
+
                         .anyRequest().authenticated());
 
         http.authenticationProvider(authenticationProvider());

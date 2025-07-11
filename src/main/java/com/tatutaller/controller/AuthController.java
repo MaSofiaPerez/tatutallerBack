@@ -11,6 +11,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
+import org.springframework.http.HttpStatus;
+
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -141,4 +148,47 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
     }
+
+    @PostMapping("/login-google")
+    public ResponseEntity<?> loginGoogle(@RequestBody Map<String, String> body) {
+        try {
+            String idTokenString = body.get("token");
+            System.out.println("Antes de crear GoogleIdTokenVerifier");
+            GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
+                    GoogleNetHttpTransport.newTrustedTransport(),
+                    GsonFactory.getDefaultInstance())
+                    .setAudience(Collections.singletonList("737455985650-mdp35pj783ms660iu8c3tvc63pl13hga.apps.googleusercontent.com"))
+                    .build();
+            System.out.println("Después de crear GoogleIdTokenVerifier");
+
+            GoogleIdToken idToken = verifier.verify(idTokenString);
+            if (idToken != null) {
+                GoogleIdToken.Payload payload = idToken.getPayload();
+                String email = payload.getEmail();
+                String nombre = (String) payload.get("name");
+
+                // Busca o crea el usuario en tu sistema
+                User user = authService.loginWithGoogle(email, nombre);
+
+                // Genera tu propio JWT
+                String jwt = authService.generateJwtForUser(user);
+
+                Map<String, Object> response = new HashMap<>();
+                response.put("token", jwt);
+                response.put("user", user);
+
+                return ResponseEntity.ok(response);
+            } else {
+                Map<String, String> error = new HashMap<>();
+                error.put("message", "Token de Google inválido");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+            }
+        } catch (Exception e) {
+            e.printStackTrace(); // <-- Agrega esto para ver el error real
+            Map<String, String> error = new HashMap<>();
+            error.put("message", "Error interno: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+
 }

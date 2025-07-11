@@ -107,4 +107,26 @@ public class AuthService {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
     }
+
+    /**
+     * Login o registro de usuario usando Google.
+     * Si el usuario existe, lo retorna. Si no existe, lanza excepción.
+     */
+    public User loginWithGoogle(String email, String nombre) {
+        String emailNormalizado = email.trim().toLowerCase();
+        return userRepository.findByEmail(emailNormalizado)
+                .orElseThrow(() -> new RuntimeException("El usuario no está registrado en el sistema. Solicite acceso al administrador."));
+    }
+
+    /**
+     * Genera un JWT para el usuario autenticado (para login con Google).
+     */
+    public String generateJwtForUser(User user) {
+        // Usa tu clase UserPrincipal personalizada
+        com.tatutaller.security.UserPrincipal userPrincipal = com.tatutaller.security.UserPrincipal.create(user);
+        org.springframework.security.core.Authentication authentication =
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                        userPrincipal, null, userPrincipal.getAuthorities());
+        return jwtUtils.generateJwtToken(authentication);
+    }
 }
