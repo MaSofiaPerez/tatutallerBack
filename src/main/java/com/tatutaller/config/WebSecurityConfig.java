@@ -75,7 +75,10 @@ public class WebSecurityConfig {
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
                         .requestMatchers("/api/auth/**").authenticated()
+                        .requestMatchers("/api/auth/verify").permitAll() // Permitir acceso público
+
                         .anyRequest().authenticated());
 
         http.authenticationProvider(authenticationProvider());

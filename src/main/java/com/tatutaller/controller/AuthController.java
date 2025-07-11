@@ -121,6 +121,24 @@ public class AuthController {
         }
     }
 
+    @GetMapping("/verify")
+    public ResponseEntity<?> verifyAuth() {
+        // Obtener el usuario autenticado
+        org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(401).body(Map.of("message", "Usuario no autenticado"));
+        }
+
+        String email = authentication.getName();
+        User user = authService.getUserByEmail(email);
+
+        // Crear y devolver JwtResponse
+        JwtResponse jwtResponse = new JwtResponse(null, user); // Token es null porque no se genera aquí
+        return ResponseEntity.ok(jwtResponse);
+    }
+
     // Endpoint temporal para debugging
     @GetMapping("/debug/users")
     public ResponseEntity<?> debugUsers() {
