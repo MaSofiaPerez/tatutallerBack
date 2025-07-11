@@ -9,11 +9,15 @@ import org.springframework.web.bind.annotation.*;
 
 import org.springframework.security.core.Authentication;
 import com.tatutaller.security.UserPrincipal;
+import com.tatutaller.service.AuthService;
+
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import java.util.Map;
 
 import java.util.Optional;
+
+import com.tatutaller.dto.request.ChangePasswordRequest;
 import com.tatutaller.dto.response.UserProfileResponse;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -24,6 +28,9 @@ public class UserInfoController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private AuthService authService;
 
     // Endpoint privado para obtener datos de usuario por ID (para usuarios
     // autenticados)
@@ -112,6 +119,37 @@ public class UserInfoController {
             return ResponseEntity.ok(dto);
         } else {
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PutMapping("/change-password")
+    public ResponseEntity<?> changePassword(
+            Authentication authentication,
+            @Valid @RequestBody ChangePasswordRequest request) {
+        try {
+            if (authentication == null || !authentication.isAuthenticated()) {
+                return ResponseEntity.status(401).body(Map.of("message", "Usuario no autenticado"));
+            }
+
+            String email = authentication.getName();
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+            if (user.getMustChangePassword() != null && user.getMustChangePassword()) {
+                // Primer acceso: solo requiere nueva contraseña
+                authService.changePassword(email, request.getNewPassword());
+            } else {
+                // Cambio regular: requiere contraseña actual
+                if (request.getCurrentPassword() == null || request.getCurrentPassword().trim().isEmpty()) {
+                    return ResponseEntity.badRequest().body(Map.of(
+                            "message", "La contraseña actual es obligatoria para cambios de contraseña regulares"));
+                }
+                authService.changePasswordWithValidation(email, request.getCurrentPassword(), request.getNewPassword());
+            }
+
+            return ResponseEntity.ok(Map.of("message", "Contraseña cambiada exitosamente"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
 }
