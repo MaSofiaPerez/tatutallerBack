@@ -7,7 +7,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.security.core.Authentication;
+import com.tatutaller.security.UserPrincipal;
+import com.tatutaller.service.AuthService;
+
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import java.util.Map;
+
 import java.util.Optional;
+
+import com.tatutaller.dto.request.ChangePasswordRequest;
+import com.tatutaller.dto.response.UserProfileResponse;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -18,6 +29,9 @@ public class UserInfoController {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private AuthService authService;
+
     // Endpoint privado para obtener datos de usuario por ID (para usuarios
     // autenticados)
     @GetMapping("/{id}")
@@ -25,5 +39,117 @@ public class UserInfoController {
         Optional<User> user = userRepository.findById(id);
         return user.map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    // GET /api/users/profile
+    @GetMapping("/profile")
+    public ResponseEntity<UserProfileResponse> getProfile(Authentication authentication) {
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        Optional<User> userOpt = userRepository.findById(userPrincipal.getId());
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        User user = userOpt.get();
+        UserProfileResponse dto = new UserProfileResponse(
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                user.getPhone(),
+                user.getAddress(),
+                user.getRole().name()
+        );
+        return ResponseEntity.ok(dto);
+    }
+
+    // PUT /api/users/profile
+    @PutMapping("/profile")
+    public ResponseEntity<UserProfileResponse> updateProfile(
+            Authentication authentication,
+            @Valid @RequestBody Map<String, String> body) {
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        Optional<User> userOpt = userRepository.findById(userPrincipal.getId());
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+        User user = userOpt.get();
+
+        user.setName(body.getOrDefault("name", user.getName() != null ? user.getName() : ""));
+        user.setPhone(body.getOrDefault("phone", user.getPhone() != null ? user.getPhone() : ""));
+        user.setAddress(body.getOrDefault("address", user.getAddress() != null ? user.getAddress() : ""));
+
+        userRepository.save(user);
+
+        UserProfileResponse dto = new UserProfileResponse(
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                user.getPhone(),
+                user.getAddress(),
+                user.getRole().name()
+        );
+        return ResponseEntity.ok(dto);
+    }
+//Solamente oara Admin debido a que modifica rol
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserProfileResponse> updateUser(
+            @PathVariable Long id,
+            @RequestBody User userDetails) {
+        Optional<User> optionalUser = userRepository.findById(id);
+
+        if (optionalUser.isPresent()) {
+            User user = optionalUser.get();
+            user.setName(userDetails.getName());
+            user.setEmail(userDetails.getEmail());
+            user.setPhone(userDetails.getPhone());
+            user.setAddress(userDetails.getAddress());
+            user.setRole(userDetails.getRole());
+            user.setStatus(userDetails.getStatus());
+
+            User updatedUser = userRepository.save(user);
+
+            UserProfileResponse dto = new UserProfileResponse(
+                updatedUser.getId(),
+                updatedUser.getName(),
+                updatedUser.getEmail(),
+                updatedUser.getPhone(),
+                updatedUser.getAddress(),
+                updatedUser.getRole().name()
+            );
+            return ResponseEntity.ok(dto);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PutMapping("/change-password")
+    public ResponseEntity<?> changePassword(
+            Authentication authentication,
+            @Valid @RequestBody ChangePasswordRequest request) {
+        try {
+            if (authentication == null || !authentication.isAuthenticated()) {
+                return ResponseEntity.status(401).body(Map.of("message", "Usuario no autenticado"));
+            }
+
+            String email = authentication.getName();
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+            if (user.getMustChangePassword() != null && user.getMustChangePassword()) {
+                // Primer acceso: solo requiere nueva contraseña
+                authService.changePassword(email, request.getNewPassword());
+            } else {
+                // Cambio regular: requiere contraseña actual
+                if (request.getCurrentPassword() == null || request.getCurrentPassword().trim().isEmpty()) {
+                    return ResponseEntity.badRequest().body(Map.of(
+                            "message", "La contraseña actual es obligatoria para cambios de contraseña regulares"));
+                }
+                authService.changePasswordWithValidation(email, request.getCurrentPassword(), request.getNewPassword());
+            }
+
+            return ResponseEntity.ok(Map.of("message", "Contraseña cambiada exitosamente"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
     }
 }
