@@ -1,5 +1,6 @@
 package com.tatutaller.controller;
 
+import com.tatutaller.entity.Booking;
 import com.tatutaller.entity.ClassEntity;
 import com.tatutaller.entity.User;
 import com.tatutaller.repository.ClassRepository;
@@ -8,6 +9,7 @@ import com.tatutaller.repository.BookingRepository;
 import com.tatutaller.service.UserService;
 import com.tatutaller.dto.request.CreateClassRequest;
 import com.tatutaller.dto.response.PublicClassResponse;
+import com.tatutaller.dto.response.BookingResponse;
 import com.tatutaller.dto.response.ClassResponse;
 import com.tatutaller.dto.response.TimeSlotResponse;
 import jakarta.validation.Valid;
@@ -407,6 +409,31 @@ public class ClassController {
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
                     .body(Map.of("message", "Error interno del servidor: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/admin/classes/{id}/reservations")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> getClassReservations(@PathVariable Long id) {
+        try {
+            Optional<ClassEntity> classEntity = classRepository.findById(id);
+            if (classEntity.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            List<Booking> bookings = bookingRepository.findByClassEntity(classEntity.get());
+            List<BookingResponse> bookingResponses = bookings.stream()
+                    .map(booking -> new BookingResponse(
+                            booking.getId(),
+                            booking.getUser().getName(),
+                            booking.getBookingDate(),
+                            booking.getStatus().toString()))
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(bookingResponses);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("message", "Error al obtener las reservas: " + e.getMessage()));
         }
     }
 }

@@ -34,6 +34,13 @@ public class BookingResponse {
         this.userEmail = userEmail;
     }
 
+    public BookingResponse(Long id, String userName, LocalDate bookingDate, String status) {
+        this.id = id;
+        this.userName = userName;
+        this.bookingDate = bookingDate;
+        this.status = status;
+    }
+
     public Long getId() {
         return id;
     }
