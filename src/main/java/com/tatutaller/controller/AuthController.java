@@ -79,48 +79,6 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/change-password")
-    public ResponseEntity<?> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
-        try {
-            // Get the current user's email from the security context
-            org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder
-                    .getContext().getAuthentication();
-
-            if (authentication == null || !authentication.isAuthenticated()) {
-                Map<String, String> error = new HashMap<>();
-                error.put("message", "Usuario no autenticado");
-                return ResponseEntity.status(401).body(error);
-            }
-
-            String email = authentication.getName();
-
-            // Get the user to check if they must change password
-            User user = authService.getUserByEmail(email);
-
-            if (user.getMustChangePassword() != null && user.getMustChangePassword()) {
-                // For users who must change password (first time), no current password
-                // validation needed
-                authService.changePassword(email, request.getNewPassword());
-            } else {
-                // For regular password changes, validate current password
-                if (request.getCurrentPassword() == null || request.getCurrentPassword().trim().isEmpty()) {
-                    Map<String, String> error = new HashMap<>();
-                    error.put("message", "La contraseña actual es obligatoria para cambios de contraseña regulares");
-                    return ResponseEntity.badRequest().body(error);
-                }
-                authService.changePasswordWithValidation(email, request.getCurrentPassword(), request.getNewPassword());
-            }
-
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "Contraseña cambiada exitosamente");
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("message", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
-        }
-    }
-
     @GetMapping("/verify")
     public ResponseEntity<?> verifyAuth() {
         // Obtener el usuario autenticado
