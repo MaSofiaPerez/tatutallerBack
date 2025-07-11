@@ -67,18 +67,17 @@ public class WebSecurityConfig {
                         .requestMatchers(
                             "/api/auth/login",
                             "/api/auth/register",
-                            "/api/auth/login-google", // <-- Agrega esta línea
-                            "/api/auth/debug/**"
+                            "/api/auth/login-google",
+                            "/api/auth/google",
+                            "/api/auth/debug/**",
+                            "/api/auth/verify"
                         ).permitAll()
                         .requestMatchers("/api/public/**").permitAll()
                         .requestMatchers("/api/imagenes/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-
                         .requestMatchers("/api/auth/**").authenticated()
-                        .requestMatchers("/api/auth/verify").permitAll() // Permitir acceso público
-
                         .anyRequest().authenticated());
 
         http.authenticationProvider(authenticationProvider());
@@ -93,11 +92,11 @@ public class WebSecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(Arrays.asList("*")); // Cambiar a allowedOriginPatterns
+        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
-        configuration.setExposedHeaders(Arrays.asList("Authorization")); // Exponer headers
+        configuration.setExposedHeaders(Arrays.asList("Authorization"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
