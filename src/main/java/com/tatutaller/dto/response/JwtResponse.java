@@ -11,6 +11,8 @@ public class JwtResponse {
     private String email;
     private String role;
     private Boolean mustChangePassword;
+    private String phone;
+    private String address;
 
     // Constructors
     public JwtResponse() {
@@ -23,6 +25,20 @@ public class JwtResponse {
         this.email = user.getEmail();
         this.role = user.getRole().toString();
         this.mustChangePassword = user.getMustChangePassword();
+        this.phone = user.getPhone();
+        this.address = user.getAddress();
+    }
+
+    public JwtResponse(String token, Long id, String name, String email, String phone, String address, String role,
+            Boolean mustChangePassword) {
+        this.token = token;
+        this.id = id;
+        this.name = name;
+        this.email = email;
+        this.phone = phone;
+        this.address = address;
+        this.role = role;
+        this.mustChangePassword = mustChangePassword;
     }
 
     // Getters and Setters
@@ -80,5 +96,21 @@ public class JwtResponse {
 
     public void setMustChangePassword(Boolean mustChangePassword) {
         this.mustChangePassword = mustChangePassword;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
     }
 }
