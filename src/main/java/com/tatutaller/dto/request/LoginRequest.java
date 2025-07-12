@@ -2,11 +2,13 @@ package com.tatutaller.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 
 public class LoginRequest {
 
     @NotBlank(message = "El email es obligatorio")
     @Email(message = "El email debe ser válido")
+    @Pattern(regexp = "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$", message = "El email debe tener un formato válido con un dominio y TLD")
     private String email;
 
     @NotBlank(message = "La contraseña es obligatoria")
