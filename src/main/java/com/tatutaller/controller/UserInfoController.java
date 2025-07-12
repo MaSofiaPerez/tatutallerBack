@@ -56,9 +56,14 @@ public class UserInfoController {
                 user.getEmail(),
                 user.getPhone(),
                 user.getAddress(),
-                user.getRole().name()
-        );
+                user.getRole().name());
         return ResponseEntity.ok(dto);
+    }
+
+    // GET /api/users/me
+    @GetMapping("/me")
+    public ResponseEntity<UserProfileResponse> getCurrentUser(Authentication authentication) {
+        return getProfile(authentication);
     }
 
     // PUT /api/users/profile
@@ -85,11 +90,11 @@ public class UserInfoController {
                 user.getEmail(),
                 user.getPhone(),
                 user.getAddress(),
-                user.getRole().name()
-        );
+                user.getRole().name());
         return ResponseEntity.ok(dto);
     }
-//Solamente oara Admin debido a que modifica rol
+
+    // Solamente oara Admin debido a que modifica rol
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserProfileResponse> updateUser(
@@ -109,13 +114,12 @@ public class UserInfoController {
             User updatedUser = userRepository.save(user);
 
             UserProfileResponse dto = new UserProfileResponse(
-                updatedUser.getId(),
-                updatedUser.getName(),
-                updatedUser.getEmail(),
-                updatedUser.getPhone(),
-                updatedUser.getAddress(),
-                updatedUser.getRole().name()
-            );
+                    updatedUser.getId(),
+                    updatedUser.getName(),
+                    updatedUser.getEmail(),
+                    updatedUser.getPhone(),
+                    updatedUser.getAddress(),
+                    updatedUser.getRole().name());
             return ResponseEntity.ok(dto);
         } else {
             return ResponseEntity.notFound().build();
