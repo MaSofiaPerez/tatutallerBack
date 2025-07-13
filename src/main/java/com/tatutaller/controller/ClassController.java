@@ -6,6 +6,7 @@ import com.tatutaller.entity.User;
 import com.tatutaller.repository.ClassRepository;
 import com.tatutaller.repository.UserRepository;
 import com.tatutaller.repository.BookingRepository;
+import com.tatutaller.service.EmailService;
 import com.tatutaller.service.UserService;
 import com.tatutaller.dto.request.CreateClassRequest;
 import com.tatutaller.dto.response.PublicClassResponse;
@@ -43,6 +44,9 @@ public class ClassController {
 
     @Autowired
     private BookingRepository bookingRepository;
+
+    @Autowired
+    private EmailService emailService;
 
     // Endpoint público para obtener clases
     @GetMapping("/public/classes")
@@ -434,6 +438,42 @@ public class ClassController {
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
                     .body(Map.of("message", "Error al obtener las reservas: " + e.getMessage()));
+        }
+    }
+
+    @PutMapping("/admin/classes/{id}/status")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> updateClassStatus(@PathVariable Long id, @RequestBody Map<String, String> statusUpdate) {
+        Optional<ClassEntity> optionalClass = classRepository.findById(id);
+        if (optionalClass.isEmpty()) {
+            return ResponseEntity.status(404).body(Map.of("error", "Clase no encontrada"));
+        }
+
+        ClassEntity classEntity = optionalClass.get();
+        String newStatus = statusUpdate.get("status");
+        try {
+            ClassEntity.ClassStatus status = ClassEntity.ClassStatus.valueOf(newStatus.toUpperCase());
+            classEntity.setStatus(status);
+            classRepository.save(classEntity);
+
+            // Notificar al profesor
+            User teacher = classEntity.getInstructor();
+            if (teacher != null) {
+                try {
+                    emailService.sendClassStatusChangeToTeacher(
+                        teacher.getEmail(),
+                        teacher.getName(),
+                        classEntity.getName(),
+                        status.name()
+                    );
+                } catch (Exception e) {
+                    System.err.println("⚠️ Error enviando email de cambio de estado de clase al profesor: " + e.getMessage());
+                }
+            }
+
+            return ResponseEntity.ok(Map.of("message", "Estado de la clase actualizado y notificación enviada"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Estado no válido"));
         }
     }
 }
