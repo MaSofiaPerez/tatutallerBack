@@ -84,4 +84,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
       @Param("endTime") LocalTime endTime);
 
   List<Booking> findByClassEntityId(Long classId);
+
+  List<Booking> findByUserId(Long userId);
 }

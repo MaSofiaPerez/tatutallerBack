@@ -330,4 +330,15 @@ public class BookingController {
 
         return ResponseEntity.ok(response);
     }
+
+    // Endpoint para obtener reservas por ID de usuario (admin)
+    @GetMapping("/admin/bookings/user/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<BookingResponse>> getBookingsByUserId(@PathVariable Long id) {
+        List<Booking> bookings = bookingRepository.findByUserId(id);
+        List<BookingResponse> responses = bookings.stream()
+                .map(this::toBookingResponse)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(responses);
+    }
 }
