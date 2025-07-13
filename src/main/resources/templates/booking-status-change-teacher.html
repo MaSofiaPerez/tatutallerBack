@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Cambio de estado de reserva</title>
+</head>
+<body style="font-family: Arial, sans-serif; color: #222;">
+    <h2>¡Hola, <span th:text="${teacherName}">Profesor</span>!</h2>
+    <p>
+        La reserva de la clase <strong th:text="${className}">Clase</strong> para el estudiante
+        <strong th:text="${studentName}">Alumno</strong> el día
+        <strong th:text="${bookingDate}">Fecha</strong> a las
+        <strong th:text="${bookingTime}">Hora</strong>
+        ha cambiado de estado a:
+        <span style="font-weight:bold; color:#1976d2;" th:text="${newStatus}">Estado</span>.
+    </p>
+    <p>¡Saludos!<br/>TatuTaller</p>
+</body>
+</html>
