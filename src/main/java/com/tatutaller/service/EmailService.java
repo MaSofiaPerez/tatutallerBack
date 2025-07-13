@@ -6,8 +6,8 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
+import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -19,7 +19,7 @@ public class EmailService {
     private JavaMailSender mailSender;
 
     @Autowired
-    private TemplateEngine templateEngine;
+    private SpringTemplateEngine templateEngine;
 
     @Value("${spring.mail.username}")
     private String fromEmail;
@@ -205,6 +205,42 @@ public class EmailService {
                             "Saludos,\nEl equipo de TatuTaller",
                     userName, userEmail, temporaryPassword);
             sendSimpleEmail(userEmail, "Credenciales de acceso - TatuTaller", message);
+        }
+    }
+
+    /**
+     * Enviar notificación de cambio de estado de reserva al profesor
+     */
+    public void sendBookingStatusChangeToTeacher(
+            String teacherEmail,
+            String teacherName,
+            String className,
+            String studentName,
+            String bookingDate,
+            String bookingTime,
+            String newStatus
+    ) {
+        try {
+            Context context = new Context();
+            context.setVariable("teacherName", teacherName);
+            context.setVariable("className", className);
+            context.setVariable("studentName", studentName);
+            context.setVariable("bookingDate", bookingDate);
+            context.setVariable("bookingTime", bookingTime);
+            context.setVariable("newStatus", newStatus);
+
+            String htmlContent = templateEngine.process("booking-status-change-teacher.html", context);
+
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setTo(teacherEmail);
+            helper.setSubject("Cambio de estado en una reserva de tu clase");
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+        } catch (Exception e) {
+            System.err.println("Error enviando mail con plantilla: " + e.getMessage());
+            // (Opcional) Podrías hacer fallback a texto plano aquí
         }
     }
 }

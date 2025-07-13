@@ -209,6 +209,27 @@ public class BookingController {
                 Booking.BookingStatus status = Booking.BookingStatus.valueOf(newStatus.toUpperCase());
                 booking.setStatus(status);
                 Booking updatedBooking = bookingRepository.save(booking);
+
+                // Enviar mail al profesor si existe
+                ClassEntity classEntity = booking.getClassEntity();
+                User teacher = classEntity.getInstructor();
+                User student = booking.getUser();
+                if (teacher != null && student != null) {
+                    try {
+                        emailService.sendBookingStatusChangeToTeacher(
+                            teacher.getEmail(),
+                            teacher.getName(),
+                            classEntity.getName(),
+                            student.getName(),
+                            booking.getBookingDate().toString(),
+                            booking.getStartTime().toString() + " - " + booking.getEndTime().toString(),
+                            status.name()
+                        );
+                    } catch (Exception e) {
+                        System.err.println("⚠️ Error enviando email de cambio de estado al profesor: " + e.getMessage());
+                    }
+                }
+
                 return ResponseEntity.ok(toBookingResponse(updatedBooking));
             } catch (IllegalArgumentException e) {
                 return ResponseEntity.badRequest().build();
