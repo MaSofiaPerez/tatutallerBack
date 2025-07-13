@@ -243,4 +243,36 @@ public class EmailService {
             // (Opcional) Podrías hacer fallback a texto plano aquí
         }
     }
+
+    /**
+     * Enviar notificación de cambio de estado de clase al profesor
+     */
+    public void sendClassStatusChangeToTeacher(
+            String teacherEmail,
+            String teacherName,
+            String className,
+            String newStatus
+    ) {
+        try {
+            Context context = new Context();
+            context.setVariable("teacherName", teacherName);
+            context.setVariable("className", className);
+            context.setVariable("newStatus", newStatus);
+
+            sendHtmlEmail(
+                teacherEmail,
+                "Cambio de estado en tu clase",
+                "class-status-change-teacher",
+                context
+            );
+        } catch (Exception e) {
+            System.err.println("Error enviando mail HTML, enviando texto plano: " + e.getMessage());
+            // Fallback a email simple si falla el HTML
+            String body = String.format(
+                "Hola %s,\n\nLa clase '%s' ha cambiado de estado a: %s.\n\nSaludos,\nTatuTaller",
+                teacherName, className, newStatus
+            );
+            sendSimpleEmail(teacherEmail, "Cambio de estado en tu clase", body);
+        }
+    }
 }
