@@ -1,6 +1,8 @@
 package com.tatutaller.controller;
 
+import com.tatutaller.entity.Cart;
 import com.tatutaller.entity.User;
+import com.tatutaller.repository.CartRepository;
 import com.tatutaller.repository.UserRepository;
 import com.tatutaller.service.PasswordGeneratorService;
 import com.tatutaller.service.EmailService;
@@ -22,6 +24,9 @@ public class UserController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private CartRepository cartRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -100,6 +105,11 @@ public class UserController {
 
             // Guardar usuario
             User savedUser = userRepository.save(userRequest);
+            // Crear carrito asociado al usuario
+            Cart cart = new Cart();
+            cart.setUser(savedUser);
+            cart.setStatus(Cart.CartStatus.ACTIVE);
+            cartRepository.save(cart);
 
             // Enviar email con credenciales
             try {
