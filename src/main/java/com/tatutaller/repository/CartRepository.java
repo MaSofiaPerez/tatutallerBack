@@ -12,5 +12,5 @@ import com.tatutaller.entity.Cart;
 public interface CartRepository extends JpaRepository<Cart, Long> {
 
     Optional<Cart> findByUserId(Long id);
-    
+    Optional<Cart> findByToken(String token);
 }

@@ -4,6 +4,9 @@ import com.tatutaller.entity.Cart;
 import com.tatutaller.entity.CartItem;
 import com.tatutaller.entity.Product;
 import com.tatutaller.entity.User;
+import com.tatutaller.dto.response.CartResponse;
+import com.tatutaller.dto.response.CartItemResponse;
+import com.tatutaller.dto.response.ProductResponse;
 import com.tatutaller.repository.CartItemRepository;
 import com.tatutaller.repository.CartRepository;
 import com.tatutaller.repository.ProductRepository;
@@ -17,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @CrossOrigin
@@ -33,37 +37,87 @@ public class CartController {
     @Autowired
     private UserRepository userRepository;
 
-    // 1. Obtener el carrito del usuario autenticado
     @GetMapping
-    public ResponseEntity<Cart> getCart(@AuthenticationPrincipal UserDetails userDetails) {
-        Optional<User> userOpt = userRepository.findByEmail(userDetails.getUsername());
-        if (userOpt.isEmpty()) return ResponseEntity.notFound().build();
-        User user = userOpt.get();
-        Cart cart = cartRepository.findByUserId(user.getId()).orElse(null);
+    public ResponseEntity<?> getCart(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(required = false) String cartToken) {
+        Cart cart = null;
+        if (userDetails != null) {
+            Optional<User> userOpt = userRepository.findByEmail(userDetails.getUsername());
+            if (userOpt.isEmpty()) return ResponseEntity.notFound().build();
+            User user = userOpt.get();
+            cart = cartRepository.findByUserId(user.getId()).orElse(null);
+        } else if (cartToken != null && !cartToken.isBlank()) {
+            cart = cartRepository.findByToken(cartToken).orElse(null);
+        }
         if (cart == null) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(cart);
+
+        List<CartItemResponse> items = cart.getItems().stream()
+                .map(item -> new CartItemResponse(
+                        item.getId(),
+                        new ProductResponse(
+                                item.getProduct().getId(),
+                                item.getProduct().getName(),
+                                item.getProduct().getDescription(),
+                                item.getProduct().getPrice(),
+                                item.getProduct().getStock(),
+                                item.getProduct().getImageUrl(),
+                                item.getProduct().getCategory(),
+                                item.getProduct().getStatus(),
+                                item.getProduct().getCreatedAt() != null ? item.getProduct().getCreatedAt().toString() : null,
+                                item.getProduct().getUpdatedAt() != null ? item.getProduct().getUpdatedAt().toString() : null
+                        ),
+                        item.getQuantity()
+                ))
+                .toList();
+
+        CartResponse cartResponse = new CartResponse(
+                cart.getId(),
+                cart.getToken(),
+                cart.getStatus().name(),
+                items
+        );
+
+        return ResponseEntity.ok(Map.of(
+                "cart", cartResponse,
+                "cartToken", cart.getToken()
+        ));
     }
 
-    // 2. Agregar producto al carrito
     @PostMapping("/add")
     @Transactional
     public ResponseEntity<?> addProductToCart(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam Long productId,
-            @RequestParam(defaultValue = "1") int quantity) {
+            @RequestParam(defaultValue = "1") int quantity,
+            @RequestParam(required = false) String cartToken) {
 
-        Optional<User> userOpt = userRepository.findByEmail(userDetails.getUsername());
-        if (userOpt.isEmpty()) return ResponseEntity.badRequest().body("Usuario no encontrado");
-        User user = userOpt.get();
+        Cart cart = null;
+        User user = null;
 
-        Cart cart = cartRepository.findByUserId(user.getId()).orElse(null);
-        if (cart == null) return ResponseEntity.badRequest().body("Carrito no encontrado");
+        if (userDetails != null) {
+            Optional<User> userOpt = userRepository.findByEmail(userDetails.getUsername());
+            if (userOpt.isEmpty()) return ResponseEntity.badRequest().body(Map.of("message", "Usuario no encontrado"));
+            user = userOpt.get();
+            cart = cartRepository.findByUserId(user.getId()).orElse(null);
+        } else if (cartToken != null && !cartToken.isBlank()) {
+            cart = cartRepository.findByToken(cartToken).orElse(null);
+        }
+
+        if (cart == null) {
+            cart = new Cart();
+            cart.setUser(user); // null si es anónimo
+            if (cartToken == null || cartToken.isBlank()) {
+                cartToken = java.util.UUID.randomUUID().toString();
+            }
+            cart.setToken(cartToken);
+            cartRepository.save(cart);
+        }
 
         Optional<Product> productOpt = productRepository.findById(productId);
-        if (productOpt.isEmpty()) return ResponseEntity.badRequest().body("Producto no encontrado");
+        if (productOpt.isEmpty()) return ResponseEntity.badRequest().body(Map.of("message", "Producto no encontrado"));
         Product product = productOpt.get();
 
-        // Buscar si ya existe el item
         CartItem item = cart.getItems().stream()
                 .filter(ci -> ci.getProduct().getId().equals(productId))
                 .findFirst()
@@ -81,58 +135,133 @@ public class CartController {
             cart.getItems().add(newItem);
         }
         cartRepository.save(cart);
-        return ResponseEntity.ok(cart);
+
+        List<CartItemResponse> items = cart.getItems().stream()
+                .map(ci -> new CartItemResponse(
+                        ci.getId(),
+                        new ProductResponse(
+                                ci.getProduct().getId(),
+                                ci.getProduct().getName(),
+                                ci.getProduct().getDescription(),
+                                ci.getProduct().getPrice(),
+                                ci.getProduct().getStock(),
+                                ci.getProduct().getImageUrl(),
+                                ci.getProduct().getCategory(),
+                                ci.getProduct().getStatus(),
+                                ci.getProduct().getCreatedAt() != null ? ci.getProduct().getCreatedAt().toString() : null,
+                                ci.getProduct().getUpdatedAt() != null ? ci.getProduct().getUpdatedAt().toString() : null
+                        ),
+                        ci.getQuantity()
+                ))
+                .toList();
+
+        CartResponse cartResponse = new CartResponse(
+                cart.getId(),
+                cart.getToken(),
+                cart.getStatus().name(),
+                items
+        );
+
+        return ResponseEntity.ok(Map.of(
+                "cart", cartResponse,
+                "cartToken", cart.getToken()
+        ));
     }
 
-    // 3. Modificar cantidad de un producto
     @PutMapping("/item/{itemId}")
     @Transactional
     public ResponseEntity<?> updateCartItemQuantity(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long itemId,
-            @RequestParam int quantity) {
+            @RequestParam int quantity,
+            @RequestParam(required = false) String cartToken) {
 
-        if (quantity < 1) return ResponseEntity.badRequest().body("Cantidad inválida");
+        if (quantity < 1) return ResponseEntity.badRequest().body(Map.of("message", "Cantidad inválida"));
 
         Optional<CartItem> itemOpt = cartItemRepository.findById(itemId);
         if (itemOpt.isEmpty()) return ResponseEntity.notFound().build();
 
         CartItem item = itemOpt.get();
-        // Opcional: validar que el item pertenezca al usuario autenticado
+        Cart cart = item.getCart();
+
+        boolean autorizado = false;
+        if (userDetails != null && cart.getUser() != null) {
+            Optional<User> userOpt = userRepository.findByEmail(userDetails.getUsername());
+            autorizado = userOpt.isPresent() && cart.getUser().getId().equals(userOpt.get().getId());
+        } else if (cartToken != null && cartToken.equals(cart.getToken())) {
+            autorizado = true;
+        }
+        if (!autorizado) return ResponseEntity.status(403).body(Map.of("message", "No autorizado"));
+
         item.setQuantity(quantity);
         cartItemRepository.save(item);
-        return ResponseEntity.ok(item);
+
+        CartItemResponse itemResponse = new CartItemResponse(
+                item.getId(),
+                new ProductResponse(
+                        item.getProduct().getId(),
+                        item.getProduct().getName(),
+                        item.getProduct().getDescription(),
+                        item.getProduct().getPrice(),
+                        item.getProduct().getStock(),
+                        item.getProduct().getImageUrl(),
+                        item.getProduct().getCategory(),
+                        item.getProduct().getStatus(),
+                        item.getProduct().getCreatedAt() != null ? item.getProduct().getCreatedAt().toString() : null,
+                        item.getProduct().getUpdatedAt() != null ? item.getProduct().getUpdatedAt().toString() : null
+                ),
+                item.getQuantity()
+        );
+        return ResponseEntity.ok(itemResponse);
     }
 
-    // 4. Eliminar producto del carrito
     @DeleteMapping("/item/{itemId}")
     @Transactional
     public ResponseEntity<?> removeCartItem(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable Long itemId) {
+            @PathVariable Long itemId,
+            @RequestParam(required = false) String cartToken) {
 
         Optional<CartItem> itemOpt = cartItemRepository.findById(itemId);
         if (itemOpt.isEmpty()) return ResponseEntity.notFound().build();
 
+        CartItem item = itemOpt.get();
+        Cart cart = item.getCart();
+
+        boolean autorizado = false;
+        if (userDetails != null && cart.getUser() != null) {
+            Optional<User> userOpt = userRepository.findByEmail(userDetails.getUsername());
+            autorizado = userOpt.isPresent() && cart.getUser().getId().equals(userOpt.get().getId());
+        } else if (cartToken != null && cartToken.equals(cart.getToken())) {
+            autorizado = true;
+        }
+        if (!autorizado) return ResponseEntity.status(403).body(Map.of("message", "No autorizado"));
+
         cartItemRepository.deleteById(itemId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(Map.of("message", "Item eliminado"));
     }
 
-    // 5. Vaciar carrito
     @DeleteMapping("/clear")
     @Transactional
-    public ResponseEntity<?> clearCart(@AuthenticationPrincipal UserDetails userDetails) {
-        Optional<User> userOpt = userRepository.findByEmail(userDetails.getUsername());
-        if (userOpt.isEmpty()) return ResponseEntity.badRequest().body("Usuario no encontrado");
-        User user = userOpt.get();
+    public ResponseEntity<?> clearCart(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(required = false) String cartToken) {
 
-        Cart cart = cartRepository.findByUserId(user.getId()).orElse(null);
-        if (cart == null) return ResponseEntity.badRequest().body("Carrito no encontrado");
+        Cart cart = null;
+        if (userDetails != null) {
+            Optional<User> userOpt = userRepository.findByEmail(userDetails.getUsername());
+            if (userOpt.isEmpty()) return ResponseEntity.badRequest().body(Map.of("message", "Usuario no encontrado"));
+            User user = userOpt.get();
+            cart = cartRepository.findByUserId(user.getId()).orElse(null);
+        } else if (cartToken != null && !cartToken.isBlank()) {
+            cart = cartRepository.findByToken(cartToken).orElse(null);
+        }
+        if (cart == null) return ResponseEntity.badRequest().body(Map.of("message", "Carrito no encontrado"));
 
-        cart.getItems().forEach(item -> cartItemRepository.delete(item));
+        cart.getItems().forEach(cartItemRepository::delete);
         cart.getItems().clear();
         cartRepository.save(cart);
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(Map.of("message", "Carrito vaciado"));
     }
 }

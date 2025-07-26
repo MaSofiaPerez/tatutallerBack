@@ -72,6 +72,7 @@ public class WebSecurityConfig {
                             "/api/auth/debug/**",
                             "/api/auth/verify"
                         ).permitAll()
+                        .requestMatchers("/api/cart/**").permitAll() // <--- acceso libre a este endpoint
                         .requestMatchers("/api/public/**").permitAll()
                         .requestMatchers("/api/imagenes/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
