@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 @Entity
@@ -18,11 +19,14 @@ public class Cart {
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false, unique = true)
-    @NotNull
-    private User user;
+    @JoinColumn(name = "user_id", unique = true,nullable = true)
+    private User user; // Ahora puede ser null para carritos anónimos
+
+    @Column(name = "token", unique = true, length = 64)
+    private String token; // Token único para carritos anónimos
 
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference//Estaba haciendo una recursión infinita, ahora se maneja correctamente
     private List<CartItem> items = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
@@ -68,6 +72,10 @@ public class Cart {
     public Long getId() { return id; }
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }
+
+    public String getToken() { return token; }
+    public void setToken(String token) { this.token = token; }
+
     public List<CartItem> getItems() { return items; }
     public void setItems(List<CartItem> items) { this.items = items; }
     public CartStatus getStatus() { return status; }
