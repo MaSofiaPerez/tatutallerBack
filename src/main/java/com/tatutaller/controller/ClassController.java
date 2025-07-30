@@ -95,18 +95,18 @@ public class ClassController {
     }
 
     private ClassResponse convertToClassResponse(ClassEntity classEntity) {
-        // Mapear dayOfWeek enum a string legible
-        String weekDay = classEntity.getDayOfWeek() != null ? getSpanishDayName(classEntity.getDayOfWeek().toString())
-                : null;
+        String weekDay = classEntity.getDayOfWeek() != null ? getSpanishDayName(classEntity.getDayOfWeek().toString()) : null;
         String instructorName = classEntity.getInstructor() != null ? classEntity.getInstructor().getName() : null;
+        String level = classEntity.getLevel() != null ? classEntity.getLevel().toString() : null;
         return new ClassResponse(
                 classEntity.getId(),
                 classEntity.getName(),
                 weekDay,
                 instructorName,
                 classEntity.getStartTime(),
-                classEntity.getEndTime(), // ahora se envía endTime
-                classEntity.getDuration() // String para mostrar "3 horas"
+                classEntity.getEndTime(),
+                classEntity.getDuration(),
+                level
         );
     }
 

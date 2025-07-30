@@ -75,19 +75,21 @@ public class BookingController {
 
                     // VALIDAR CUPO MÁXIMO
                     if (classEntity.get().getMaxCapacity() != null) {
-                        Long overlappingBookings = bookingRepository.countOverlappingBookings(
+                        // Cuenta reservas activas para esa clase, fecha y horario
+                        Long reservasActuales = bookingRepository.countOverlappingBookings(
                                 bookingRequest.getClassId(),
                                 bookingRequest.getBookingDate(),
                                 bookingRequest.getStartTime(),
-                                bookingRequest.getEndTime());
+                                bookingRequest.getEndTime()
+                        );
 
-                        if (overlappingBookings >= classEntity.get().getMaxCapacity()) {
+                        if (reservasActuales >= classEntity.get().getMaxCapacity()) {
                             Map<String, Object> response = new HashMap<>();
                             response.put("success", false);
                             response.put("error", "No hay cupos disponibles para este horario");
                             response.put("message", "El cupo máximo para esta clase es de "
                                     + classEntity.get().getMaxCapacity() + " personas");
-                            response.put("currentBookings", overlappingBookings);
+                            response.put("currentBookings", reservasActuales);
                             return ResponseEntity.status(409).body(response);
                         }
                     }
