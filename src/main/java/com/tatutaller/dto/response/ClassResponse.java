@@ -10,9 +10,10 @@ public class ClassResponse {
     private LocalTime startTime;
     private LocalTime endTime; // NUEVO: hora de fin
     private String duration; // String para mostrar "3 horas", etc.
+    private String level; // <--- agrega esto
 
     public ClassResponse(Long id, String name, String weekDay, String instructor, LocalTime startTime,
-            LocalTime endTime, String duration) {
+            LocalTime endTime, String duration, String level) {
         this.id = id;
         this.name = name;
         this.weekDay = weekDay;
@@ -20,6 +21,7 @@ public class ClassResponse {
         this.startTime = startTime;
         this.endTime = endTime;
         this.duration = duration;
+        this.level = level;
     }
 
     public Long getId() {
@@ -50,6 +52,10 @@ public class ClassResponse {
         return duration;
     }
 
+    public String getLevel() {
+        return level;
+    }
+
     public void setId(Long id) {
         this.id = id;
     }
@@ -76,5 +82,9 @@ public class ClassResponse {
 
     public void setDuration(String duration) {
         this.duration = duration;
+    }
+
+    public void setLevel(String level) {
+        this.level = level;
     }
 }
