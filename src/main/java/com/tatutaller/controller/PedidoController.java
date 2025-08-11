@@ -1,16 +1,13 @@
 package com.tatutaller.controller;
 
 import com.tatutaller.entity.Pedido;
-import com.tatutaller.entity.CartItem;
-import com.tatutaller.entity.User;
+import com.tatutaller.dto.response.PedidoResponse;
 import com.tatutaller.service.PedidoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
-import java.security.Principal;
-import java.util.List;
 import java.util.Map;
 
 @CrossOrigin(origins = "*")
@@ -21,7 +18,6 @@ public class PedidoController {
     @Autowired
     private PedidoService pedidoService;
 
-    // Endpoint para crear un pedido y vincularlo con Mercado Pago
     @PostMapping
     public ResponseEntity<?> crearPedido(@Valid @RequestBody Map<String, Object> payload) {
         String email = (String) payload.get("email");
@@ -29,12 +25,19 @@ public class PedidoController {
             return ResponseEntity.badRequest().body(Map.of("error", "Email es requerido"));
         }
 
-        Pedido pedido = pedidoService.crearPedidoPorEmail(email);
+        try {
+            Pedido pedido = pedidoService.crearPedidoPorEmail(email);
+            PedidoResponse pedidoResponse = new PedidoResponse(pedido);
 
-        // Retornar entidad completa y externalReference para Mercado Pago
-        return ResponseEntity.ok(Map.of(
-            "pedido", pedido,
-            "externalReference", pedido.getExternalReference()
-        ));
+            return ResponseEntity.ok(Map.of(
+                "pedido", pedidoResponse,
+                "externalReference", pedido.getExternalReference()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "error", "No se pudo crear el pedido",
+                "details", e.getMessage()
+            ));
+        }
     }
 }
