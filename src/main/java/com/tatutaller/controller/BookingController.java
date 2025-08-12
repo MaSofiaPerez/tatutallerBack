@@ -182,7 +182,7 @@ public class BookingController {
 
     // Endpoints administrativos
     @GetMapping("/admin/bookings")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
     public ResponseEntity<List<BookingResponse>> getAllBookings() {
         List<Booking> bookings = bookingRepository.findAll();
         List<BookingResponse> responses = bookings.stream().map(this::toBookingResponse).collect(Collectors.toList());
@@ -190,7 +190,7 @@ public class BookingController {
     }
 
     @GetMapping("/admin/bookings/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
     public ResponseEntity<BookingResponse> getBookingById(@PathVariable Long id) {
         Optional<Booking> booking = bookingRepository.findById(id);
         return booking.map(b -> ResponseEntity.ok(toBookingResponse(b)))
@@ -198,7 +198,7 @@ public class BookingController {
     }
 
     @PutMapping("/admin/bookings/{id}/status")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
     public ResponseEntity<BookingResponse> updateBookingStatus(@PathVariable Long id,
             @RequestBody Map<String, String> statusUpdate) {
         Optional<Booking> optionalBooking = bookingRepository.findById(id);
@@ -242,7 +242,7 @@ public class BookingController {
     }
 
     @DeleteMapping("/admin/bookings/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
     public ResponseEntity<?> deleteBooking(@PathVariable Long id) {
         if (bookingRepository.existsById(id)) {
             bookingRepository.deleteById(id);
@@ -356,7 +356,7 @@ public class BookingController {
 
     // Endpoint para obtener reservas por ID de usuario (admin)
     @GetMapping("/admin/bookings/user/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
     public ResponseEntity<List<BookingResponse>> getBookingsByUserId(@PathVariable Long id) {
         List<Booking> bookings = bookingRepository.findByUserId(id);
         List<BookingResponse> responses = bookings.stream()
@@ -366,7 +366,7 @@ public class BookingController {
     }
 
     @GetMapping("/admin/bookings/count")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
     public ResponseEntity<Map<String, Long>> getBookingsCount() {
       long count = bookingRepository.count();
         Map<String, Long> response = new HashMap<>();

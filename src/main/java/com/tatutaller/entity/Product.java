@@ -26,6 +26,12 @@ public class Product {
     @Column(length = 1000)
     private String description;
 
+    @Column 
+    private int cantidadProducto; // Ej: 250, 500, 1000
+
+    @Column(length = 20)
+    private String unidadMedida; // Ej: "g", "kg", "ml"
+
     @NotNull(message = "El precio es obligatorio")
     @DecimalMin(value = "0.0", inclusive = false, message = "El precio debe ser mayor a 0")
     @Column(precision = 10, scale = 2)
@@ -159,6 +165,8 @@ public class Product {
         this.description = description;
     }
 
+    
+
     public BigDecimal getPrice() {
         return price;
     }
@@ -214,4 +222,13 @@ public class Product {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
+
+    public void setCantidadProducto(int cantidadProducto) {
+        this.cantidadProducto = cantidadProducto;
+    }
+
+    public int getCantidadProducto() {
+        return cantidadProducto;
+    }
+    
 }
