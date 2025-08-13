@@ -425,9 +425,18 @@ public class ClassController {
             List<BookingResponse> bookingResponses = bookings.stream()
                     .map(booking -> new BookingResponse(
                             booking.getId(),
-                            booking.getUser().getName(),
+                            booking.getClassEntity().getId(),
+                            booking.getClassEntity().getName(),
+                            booking.getClassEntity().getInstructor() != null ? booking.getClassEntity().getInstructor().getName() : null,
                             booking.getBookingDate(),
-                            booking.getStatus().toString()))
+                            booking.getStartTime(),
+                            booking.getEndTime(),
+                            booking.getStatus() != null ? booking.getStatus().name() : null,
+                            booking.getNotes(),
+                            booking.getClassEntity().getMaxCapacity() != null ? booking.getClassEntity().getMaxCapacity() : 0,
+                            booking.getUser() != null ? booking.getUser().getName() : null,
+                            booking.getUser() != null ? booking.getUser().getEmail() : null
+                    ))
                     .collect(Collectors.toList());
 
             return ResponseEntity.ok(bookingResponses);
