@@ -73,41 +73,20 @@ public class BookingController {
                 Optional<ClassEntity> classEntity = classRepository.findById(bookingRequest.getClassId());
                 if (classEntity.isPresent()) {
 
-                    // VALIDAR CUPO MÁXIMO
-                    if (classEntity.get().getMaxCapacity() != null) {
-                        // Cuenta reservas activas para esa clase, fecha y horario
-                        Long reservasActuales = bookingRepository.countOverlappingBookings(
-                                bookingRequest.getClassId(),
-                                bookingRequest.getBookingDate(),
-                                bookingRequest.getStartTime(),
-                                bookingRequest.getEndTime()
-                        );
-
-                        if (reservasActuales >= classEntity.get().getMaxCapacity()) {
-                            Map<String, Object> response = new HashMap<>();
-                            response.put("success", false);
-                            response.put("error", "No hay cupos disponibles para este horario");
-                            response.put("message", "El cupo máximo para esta clase es de "
-                                    + classEntity.get().getMaxCapacity() + " personas");
-                            response.put("currentBookings", reservasActuales);
-                            return ResponseEntity.status(409).body(response);
-                        }
-                    }
-
                     // VALIDAR SOLAPAMIENTO DE HORARIOS
-                    List<Booking> overlappingBookings = bookingRepository.findOverlappingBookings(
-                            classEntity.get(),
-                            bookingRequest.getBookingDate(),
-                            bookingRequest.getStartTime(),
-                            bookingRequest.getEndTime());
+                    // List<Booking> overlappingBookings = bookingRepository.findOverlappingBookings(
+                    //         classEntity.get(),
+                    //         bookingRequest.getBookingDate(),
+                    //         bookingRequest.getStartTime(),
+                    //         bookingRequest.getEndTime());
 
-                    if (!overlappingBookings.isEmpty()) {
-                        Map<String, Object> response = new HashMap<>();
-                        response.put("success", false);
-                        response.put("error", "Ya existe una reserva en este horario");
-                        response.put("message", "Por favor, selecciona un horario diferente");
-                        return ResponseEntity.status(409).body(response);
-                    }
+                    // if (!overlappingBookings.isEmpty()) {
+                    //     Map<String, Object> response = new HashMap<>();
+                    //     response.put("success", false);
+                    //     response.put("error", "Ya existe una reserva en este horario");
+                    //     response.put("message", "Por favor, selecciona un horario diferente");
+                    //     return ResponseEntity.status(409).body(response);
+                    // }
 
                     // Crear la reserva si pasa todas las validaciones
                     Booking booking = new Booking();

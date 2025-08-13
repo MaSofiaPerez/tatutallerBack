@@ -44,9 +44,6 @@ public class BookingService {
             java.time.LocalDate end = request.getRecurrenceEndDate();
             java.util.List<Booking> bookings = new java.util.ArrayList<>();
             while (!current.isAfter(end)) {
-                if (!isSlotAvailable(classEntity, current, request.getStartTime(), request.getEndTime())) {
-                    throw new IllegalArgumentException("No hay cupo disponible para la clase en la fecha " + current);
-                }
                 Booking booking = new Booking();
                 booking.setUser(user);
                 booking.setClassEntity(classEntity);
@@ -63,12 +60,7 @@ public class BookingService {
             return bookings.get(0); // O puedes devolver la lista si prefieres
         }
 
-        // Validar cupo y solapamiento para reserva puntual
-        if (!isSlotAvailable(classEntity, request.getBookingDate(), request.getStartTime(), request.getEndTime())) {
-            throw new IllegalArgumentException("No hay cupo disponible para la clase en el horario solicitado");
-        }
-
-        // Crear la reserva puntual
+        // Crear la reserva puntual (sin validar cupo ni solapamiento)
         Booking booking = new Booking();
         booking.setUser(user);
         booking.setClassEntity(classEntity);
@@ -81,14 +73,6 @@ public class BookingService {
 
         // Guardar la reserva
         return bookingRepository.save(booking);
-    }
-
-    private boolean isSlotAvailable(ClassEntity classEntity, java.time.LocalDate date, java.time.LocalTime start,
-            java.time.LocalTime end) {
-        // Trae todas las reservas que se solapan con el slot pedido
-        var overlapping = bookingRepository.findOverlappingBookings(classEntity, date, start, end);
-        // Si hay 6 o más, no hay cupo
-        return overlapping.size() < 6;
     }
 
 }

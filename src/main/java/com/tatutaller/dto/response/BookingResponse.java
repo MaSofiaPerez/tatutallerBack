@@ -29,7 +29,7 @@ public class BookingResponse {
         this.endTime = endTime;
         this.status = status;
         this.notes = notes;
-        this.maxCapacity = maxCapacity;
+        this.maxCapacity = 1;
         this.userName = userName;
         this.userEmail = userEmail;
     }

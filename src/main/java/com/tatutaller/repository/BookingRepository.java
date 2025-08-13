@@ -69,20 +69,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
   @Query("SELECT COUNT(b) FROM Booking b WHERE b.classEntity.id = :classId AND b.bookingDate = :date AND b.status IN ('PENDING', 'CONFIRMED')")
   Long countActiveBookingsByClassAndDate(@Param("classId") Long classId, @Param("date") LocalDate date);
 
-  @Query("""
-          SELECT COUNT(b) FROM Booking b
-          WHERE b.classEntity.id = :classId
-            AND b.bookingDate = :date
-            AND b.status IN ('PENDING', 'CONFIRMED')
-            AND b.startTime < :endTime
-            AND b.endTime > :startTime
-      """)
-  Long countOverlappingBookings(
-      @Param("classId") Long classId,
-      @Param("date") LocalDate date,
-      @Param("startTime") LocalTime startTime,
-      @Param("endTime") LocalTime endTime);
-
   List<Booking> findByClassEntityId(Long classId);
 
   List<Booking> findByUserId(Long userId);

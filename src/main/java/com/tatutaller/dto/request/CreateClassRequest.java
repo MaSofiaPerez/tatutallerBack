@@ -36,7 +36,7 @@ public class CreateClassRequest {
     private ClassLevel level;
 
     @Min(value = 1, message = "La capacidad máxima debe ser al menos 1")
-    private Integer maxCapacity;
+    private Integer maxCapacity=1;
 
     @NotNull(message = "El instructor es obligatrio")
     private Long teacherId;

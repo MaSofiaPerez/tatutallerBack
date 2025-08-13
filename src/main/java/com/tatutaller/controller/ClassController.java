@@ -186,10 +186,7 @@ public class ClassController {
 
             // 2. Buscar y validar el tallerista
             User teacher = userService.findById(request.getTeacherId());
-            if (teacher.getRole() != User.Role.TEACHER) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("message", "El usuario seleccionado no es un profesor"));
-            }
+       
 
             // 3. Mapear campos del request a Classentity
             ClassEntity classEntity = optionalClass.get();

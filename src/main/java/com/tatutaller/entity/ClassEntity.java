@@ -57,7 +57,7 @@ public class ClassEntity {
     }
 
     @Min(value = 1, message = "La capacidad máxima debe ser al menos 1")
-    private Integer maxCapacity;
+    private Integer maxCapacity=1;
 
     @Enumerated(EnumType.STRING)
     private ClassLevel level;
@@ -159,7 +159,7 @@ public class ClassEntity {
         this.dayOfWeek = dayOfWeek;
         this.startTime = startTime;
         this.endTime = endTime;
-        this.maxCapacity = maxCapacity;
+        this.maxCapacity = 1;
         this.instructor = instructor;
         this.status = ClassStatus.ACTIVE;
     }
