@@ -11,7 +11,6 @@ import com.tatutaller.repository.CartItemRepository;
 import com.tatutaller.repository.CartRepository;
 import com.tatutaller.repository.ProductRepository;
 import com.tatutaller.repository.UserRepository;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -65,7 +64,8 @@ public class CartController {
                                 item.getProduct().getCategory(),
                                 item.getProduct().getStatus(),
                                 item.getProduct().getCreatedAt() != null ? item.getProduct().getCreatedAt().toString() : null,
-                                item.getProduct().getUpdatedAt() != null ? item.getProduct().getUpdatedAt().toString() : null
+                                item.getProduct().getUpdatedAt() != null ? item.getProduct().getUpdatedAt().toString() : null,
+                                item.getProduct().getCantidadProducto()
                         ),
                         item.getQuantity()
                 ))
@@ -149,7 +149,8 @@ public class CartController {
                                 ci.getProduct().getCategory(),
                                 ci.getProduct().getStatus(),
                                 ci.getProduct().getCreatedAt() != null ? ci.getProduct().getCreatedAt().toString() : null,
-                                ci.getProduct().getUpdatedAt() != null ? ci.getProduct().getUpdatedAt().toString() : null
+                                ci.getProduct().getUpdatedAt() != null ? ci.getProduct().getUpdatedAt().toString() : null,
+                                ci.getProduct().getCantidadProducto()
                         ),
                         ci.getQuantity()
                 ))
@@ -208,7 +209,8 @@ public class CartController {
                         item.getProduct().getCategory(),
                         item.getProduct().getStatus(),
                         item.getProduct().getCreatedAt() != null ? item.getProduct().getCreatedAt().toString() : null,
-                        item.getProduct().getUpdatedAt() != null ? item.getProduct().getUpdatedAt().toString() : null
+                        item.getProduct().getUpdatedAt() != null ? item.getProduct().getUpdatedAt().toString() : null,
+                        item.getProduct().getCantidadProducto()
                 ),
                 item.getQuantity()
         );

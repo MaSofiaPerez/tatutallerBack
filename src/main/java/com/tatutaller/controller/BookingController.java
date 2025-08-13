@@ -45,19 +45,19 @@ public class BookingController {
     // Método utilitario para mapear Booking a BookingResponse
     private BookingResponse toBookingResponse(Booking booking) {
         return new BookingResponse(
-                booking.getId(),
-                booking.getClassEntity().getId(),
-                booking.getClassEntity().getName(),
-                booking.getClassEntity().getInstructor() != null ? booking.getClassEntity().getInstructor().getName()
-                        : null,
-                booking.getBookingDate(),
-                booking.getStartTime(),
-                booking.getEndTime(),
-                booking.getStatus() != null ? booking.getStatus().name() : null,
-                booking.getNotes(),
-                booking.getClassEntity().getMaxCapacity(),
-                booking.getUser() != null ? booking.getUser().getName() : null,
-                booking.getUser() != null ? booking.getUser().getEmail() : null);
+            booking.getId(),
+            booking.getClassEntity().getId(),
+            booking.getClassEntity().getName(),
+            booking.getClassEntity().getInstructor() != null ? booking.getClassEntity().getInstructor().getName() : null,
+            booking.getBookingDate(),
+            booking.getStartTime(), // <-- startTime viene de Booking y se rellena aquí
+            booking.getEndTime(),   // <-- endTime viene de Booking y se rellena aquí
+            booking.getStatus() != null ? booking.getStatus().name() : null,
+            booking.getNotes(),
+            booking.getClassEntity().getMaxCapacity(),
+            booking.getUser() != null ? booking.getUser().getName() : null,
+            booking.getUser() != null ? booking.getUser().getEmail() : null
+        );
     }
 
     // Endpoint para crear reserva (usuario autenticado)
@@ -182,7 +182,7 @@ public class BookingController {
 
     // Endpoints administrativos
     @GetMapping("/admin/bookings")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<BookingResponse>> getAllBookings() {
         List<Booking> bookings = bookingRepository.findAll();
         List<BookingResponse> responses = bookings.stream().map(this::toBookingResponse).collect(Collectors.toList());
@@ -190,7 +190,7 @@ public class BookingController {
     }
 
     @GetMapping("/admin/bookings/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BookingResponse> getBookingById(@PathVariable Long id) {
         Optional<Booking> booking = bookingRepository.findById(id);
         return booking.map(b -> ResponseEntity.ok(toBookingResponse(b)))
@@ -198,7 +198,7 @@ public class BookingController {
     }
 
     @PutMapping("/admin/bookings/{id}/status")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BookingResponse> updateBookingStatus(@PathVariable Long id,
             @RequestBody Map<String, String> statusUpdate) {
         Optional<Booking> optionalBooking = bookingRepository.findById(id);
@@ -242,7 +242,7 @@ public class BookingController {
     }
 
     @DeleteMapping("/admin/bookings/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteBooking(@PathVariable Long id) {
         if (bookingRepository.existsById(id)) {
             bookingRepository.deleteById(id);
@@ -356,7 +356,7 @@ public class BookingController {
 
     // Endpoint para obtener reservas por ID de usuario (admin)
     @GetMapping("/admin/bookings/user/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<BookingResponse>> getBookingsByUserId(@PathVariable Long id) {
         List<Booking> bookings = bookingRepository.findByUserId(id);
         List<BookingResponse> responses = bookings.stream()
@@ -366,7 +366,7 @@ public class BookingController {
     }
 
     @GetMapping("/admin/bookings/count")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Map<String, Long>> getBookingsCount() {
       long count = bookingRepository.count();
         Map<String, Long> response = new HashMap<>();

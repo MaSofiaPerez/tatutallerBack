@@ -16,6 +16,7 @@ public class ProductResponse {
     private ProductStatus status;
     private String createdAt;
     private String updatedAt;
+    private String cantidadProducto; // Ej: 250, 500, 1000
 
     public ProductResponse(
             Long id,
@@ -27,7 +28,8 @@ public class ProductResponse {
             ProductCategory category,
             ProductStatus status,
             String createdAt,
-            String updatedAt
+            String updatedAt,
+            String cantidadProducto
     ) {
         this.id = id;
         this.name = name;
@@ -39,6 +41,7 @@ public class ProductResponse {
         this.status = status;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.cantidadProducto = cantidadProducto;
     }
 
     // Getters...
@@ -52,4 +55,5 @@ public class ProductResponse {
     public ProductStatus getStatus() { return status; }
     public String getCreatedAt() { return createdAt; }
     public String getUpdatedAt() { return updatedAt; }
+    public String getCantidadProducto() { return cantidadProducto; }
 }

@@ -2,7 +2,6 @@ package com.tatutaller.controller;
 
 import com.tatutaller.dto.request.LoginRequest;
 import com.tatutaller.dto.request.RegisterRequest;
-import com.tatutaller.dto.request.ChangePasswordRequest;
 import com.tatutaller.dto.response.JwtResponse;
 import com.tatutaller.entity.User;
 import com.tatutaller.service.AuthService;
