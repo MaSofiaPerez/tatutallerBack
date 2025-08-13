@@ -7,7 +7,6 @@ import com.tatutaller.entity.Product;
 import com.tatutaller.repository.ProductRepository;
 import com.tatutaller.service.ImageService;
 
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -65,7 +64,8 @@ public class ProductController {
                 request.getName(),
                 request.getDescription(),
                 request.getPrice(),
-                request.getStock()
+                request.getStock(),
+                request.getCantidadProducto()
             );
 
             // If file is present, save it and set the imageUrl
@@ -113,6 +113,7 @@ public class ProductController {
             product.setStock(request.getStock());
             product.setCategory(request.getCategory());
             product.setStatus(request.getStatus());
+            product.setCantidadProducto(request.getCantidadProducto());
 
             // Si viene archivo, guardar imagen y actualizar URL
             if (file != null && !file.isEmpty()) {

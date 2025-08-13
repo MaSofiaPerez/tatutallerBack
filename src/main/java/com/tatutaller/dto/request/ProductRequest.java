@@ -17,6 +17,8 @@ public class ProductRequest {
 
     private String description;
 
+    private String cantidadProducto; // Ej: 250, 500, 1000
+
     @NotNull(message = "El precio del producto es obligatorio")
     @DecimalMin(value = "0.0", inclusive = false, message = "El precio debe ser mayor que cero")
     private BigDecimal price;
@@ -84,6 +86,12 @@ public class ProductRequest {
 
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
+    }
+    public void setCantidadProducto(String cantidadProducto) {
+        this.cantidadProducto = cantidadProducto;    }
+
+    public String getCantidadProducto() {
+        return cantidadProducto;
     }
 
 }

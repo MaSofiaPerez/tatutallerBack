@@ -125,14 +125,14 @@ public class ClassController {
 
     // Endpoints administrativos
     @GetMapping("/admin/classes")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<ClassEntity>> getAllClassesAdmin() {
         List<ClassEntity> classes = classRepository.findAll();
         return ResponseEntity.ok(classes);
     }
 
     @GetMapping("/admin/classes/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ClassEntity> getClassById(@PathVariable Long id) {
         Optional<ClassEntity> classEntity = classRepository.findById(id);
         return classEntity.map(ResponseEntity::ok)
@@ -140,16 +140,12 @@ public class ClassController {
     }
 
     @PostMapping("/admin/classes")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> createClass(@Valid @RequestBody CreateClassRequest request) {
         try {
             User teacher = userService.findById(request.getTeacherId());
 
-            if (teacher.getRole() != User.Role.TEACHER) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("message", "El usuario seleccionado no es un profesor"));
-            }
-
+       
             ClassEntity classEntity = new ClassEntity(
                     request.getName(),
                     request.getPrice(),
@@ -178,7 +174,7 @@ public class ClassController {
     }
 
     @PutMapping("/admin/classes/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updateClass(@PathVariable Long id,
             @Valid @RequestBody CreateClassRequest request) {
         try {
@@ -224,7 +220,7 @@ public class ClassController {
     }
 
     @DeleteMapping("/admin/classes/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteClass(@PathVariable Long id) {
         if (classRepository.existsById(id)) {
             classRepository.deleteById(id);
@@ -385,7 +381,7 @@ public class ClassController {
 
     // Endpoint administrativo para obtener reservas filtradas por ID de profesor
     @GetMapping("/admin/classes/reservations")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> getReservationsByProfessor(@RequestParam Long professorId) {
         try {
             // Verificar si el profesor existe
@@ -417,7 +413,7 @@ public class ClassController {
     }
 
     @GetMapping("/admin/classes/{id}/reservations")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> getClassReservations(@PathVariable Long id) {
         try {
             Optional<ClassEntity> classEntity = classRepository.findById(id);
@@ -442,7 +438,7 @@ public class ClassController {
     }
 
     @PutMapping("/admin/classes/{id}/status")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('TEACHER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updateClassStatus(@PathVariable Long id, @RequestBody Map<String, String> statusUpdate) {
         Optional<ClassEntity> optionalClass = classRepository.findById(id);
         if (optionalClass.isEmpty()) {

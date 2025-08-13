@@ -27,10 +27,8 @@ public class Product {
     private String description;
 
     @Column 
-    private int cantidadProducto; // Ej: 250, 500, 1000
+    private String cantidadProducto; // Ej: 250, 500, 1000
 
-    @Column(length = 20)
-    private String unidadMedida; // Ej: "g", "kg", "ml"
 
     @NotNull(message = "El precio es obligatorio")
     @DecimalMin(value = "0.0", inclusive = false, message = "El precio debe ser mayor a 0")
@@ -121,11 +119,12 @@ public class Product {
     public Product() {
     }
 
-    public Product(String name, String description, BigDecimal price, Integer stock) {
+    public Product(String name, String description, BigDecimal price, Integer stock,String cantidadProducto) {
         this.name = name;
         this.description = description;
         this.price = price;
         this.stock = stock;
+        this.cantidadProducto= cantidadProducto;
     }
 
     // Lifecycle methods
@@ -223,11 +222,11 @@ public class Product {
         this.updatedAt = updatedAt;
     }
 
-    public void setCantidadProducto(int cantidadProducto) {
+    public void setCantidadProducto(String cantidadProducto) {
         this.cantidadProducto = cantidadProducto;
     }
 
-    public int getCantidadProducto() {
+    public String getCantidadProducto() {
         return cantidadProducto;
     }
     

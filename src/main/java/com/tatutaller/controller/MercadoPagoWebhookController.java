@@ -1,11 +1,8 @@
 package com.tatutaller.controller;
 
 import com.mercadopago.MercadoPagoConfig;
-import com.mercadopago.resources.payment.Payment;
 import com.tatutaller.entity.Pedido;
 import com.tatutaller.repository.PedidoRepository;
-import com.mercadopago.exceptions.MPApiException;
-import com.mercadopago.exceptions.MPException;
 import org.apache.commons.codec.digest.HmacUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
