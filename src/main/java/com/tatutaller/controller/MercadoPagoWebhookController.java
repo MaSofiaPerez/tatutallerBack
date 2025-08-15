@@ -22,7 +22,6 @@ public class MercadoPagoWebhookController {
     public MercadoPagoWebhookController(@Value("${mercadopago.access.token}") String accessToken) {
         MercadoPagoConfig.setAccessToken(accessToken);
     }
-
     @Autowired
     private PedidoRepository pedidoRepository;
 
