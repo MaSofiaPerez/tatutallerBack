@@ -4,6 +4,7 @@ import com.tatutaller.dto.request.LoginRequest;
 import com.tatutaller.dto.request.RegisterRequest;
 import com.tatutaller.dto.response.JwtResponse;
 import com.tatutaller.entity.User;
+import com.tatutaller.entity.User.Role;
 import com.tatutaller.repository.UserRepository;
 import com.tatutaller.security.JwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,7 +56,7 @@ public class AuthService {
         User user = new User(signUpRequest.getName(),
                 signUpRequest.getEmail(),
                 encoder.encode(signUpRequest.getPassword()));
-
+        user.setRole(Role.CLIENTE);
         user.setPhone(signUpRequest.getPhone());
         user.setAddress(signUpRequest.getAddress());
 
