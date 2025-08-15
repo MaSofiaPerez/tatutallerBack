@@ -39,16 +39,13 @@ public class PedidoService {
                 .orElseThrow(() -> new RuntimeException("Carrito no encontrado"));
     }
 
-    // Determina si el usuario tiene descuento (ejemplo: si está logueado)
-    public boolean usuarioTieneDescuentoPorEmail(String email) {
-        return userRepository.findByEmail(email).isPresent();
-    }
-
     @Transactional
     public Pedido crearPedidoPorEmail(String email) {
         User usuario = obtenerUsuarioPorEmail(email);
         List<CartItem> carrito = obtenerCarritoActualPorEmail(email);
-        boolean aplicarDescuento = usuarioTieneDescuentoPorEmail(email);
+
+        // Solo aplicar descuento si el usuario NO es CLIENTE
+        boolean aplicarDescuento = usuario.getRole() != User.Role.CLIENTE;
 
         Pedido pedido = new Pedido();
         pedido.setUsuario(usuario);

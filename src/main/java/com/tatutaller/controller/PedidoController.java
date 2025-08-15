@@ -24,7 +24,6 @@ public class PedidoController {
         if (email == null || email.isBlank()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Email es requerido"));
         }
-
         try {
             Pedido pedido = pedidoService.crearPedidoPorEmail(email);
             PedidoResponse pedidoResponse = new PedidoResponse(pedido);
