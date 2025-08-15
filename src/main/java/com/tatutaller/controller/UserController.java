@@ -72,12 +72,17 @@ public class UserController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
-        if (userRepository.existsById(id)) {
-            userRepository.deleteById(id);
-            return ResponseEntity.ok().build();
-        } else {
+        Optional<User> userOpt = userRepository.findById(id);
+        if (userOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
+
+        // Eliminar el carrito asociado si existe
+        cartRepository.findByUserId(id).ifPresent(cartRepository::delete);
+
+        // Ahora sí, eliminar el usuario
+        userRepository.deleteById(id);
+        return ResponseEntity.ok().build();
     }
 
     // Endpoint para obtener solo profesores (para admin)
@@ -93,7 +98,18 @@ public class UserController {
         try {
             // Verificar si ya existe un usuario con ese email
             if (userRepository.findByEmail(userRequest.getEmail()).isPresent()) {
+                // Solo retorna error si el email ya está en uso, no por la contraseña
                 return ResponseEntity.badRequest().build();
+            }
+
+            // Si no llega el rol, setear por defecto a CLIENTE
+            if (userRequest.getRole() == null) {
+                userRequest.setRole(User.Role.CLIENTE);
+            }
+
+            // Si llega como string (por ejemplo "client" o "CLIENTE"), convertir:
+            if (userRequest.getRole() != null && !(userRequest.getRole() instanceof User.Role)) {
+                userRequest.setRole(User.Role.fromDisplayName(userRequest.getRole().toString()));
             }
 
             // Generar contraseña temporal
@@ -105,6 +121,7 @@ public class UserController {
 
             // Guardar usuario
             User savedUser = userRepository.save(userRequest);
+
             // Crear carrito asociado al usuario
             Cart cart = new Cart();
             cart.setUser(savedUser);

@@ -57,7 +57,8 @@ public class User {
     public enum Role {
         USER("usuario"),
         TEACHER("teacher"),
-        ADMIN("admin");
+        ADMIN("admin"),
+        CLIENTE("client");
 
         private final String displayName;
 
