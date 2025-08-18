@@ -70,7 +70,8 @@ public class WebSecurityConfig {
                             "/api/auth/login-google",
                             "/api/auth/google",
                             "/api/auth/debug/**",
-                            "/api/auth/verify"
+                            "/api/auth/verify",
+                             "/api/auth/reset-password"
                         ).permitAll()
                         .requestMatchers("/api/cart/**").permitAll() // <--- acceso libre a este endpoint
                         .requestMatchers("/api/public/**").permitAll()
