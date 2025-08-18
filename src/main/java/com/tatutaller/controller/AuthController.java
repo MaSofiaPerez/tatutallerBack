@@ -148,4 +148,24 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> payload) {
+        String email = payload.get("email");
+        String newPassword = payload.get("newPassword");
+        // Opcional: String token = payload.get("token"); // Si usas token de recuperación
+
+        if (email == null || newPassword == null) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Email y nueva contraseña son requeridos"));
+        }
+
+        try {
+            // Si usas token, valida el token aquí
+            authService.changePassword(email, newPassword);
+            return ResponseEntity.ok(Map.of("message", "Contraseña cambiada exitosamente"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
+
 }
