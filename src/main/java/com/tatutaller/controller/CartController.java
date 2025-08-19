@@ -51,25 +51,27 @@ public class CartController {
         }
         if (cart == null) return ResponseEntity.notFound().build();
 
-        List<CartItemResponse> items = cart.getItems().stream()
-                .map(item -> new CartItemResponse(
-                        item.getId(),
-                        new ProductResponse(
-                                item.getProduct().getId(),
-                                item.getProduct().getName(),
-                                item.getProduct().getDescription(),
-                                item.getProduct().getPrice(),
-                                item.getProduct().getStock(),
-                                item.getProduct().getImageUrl(),
-                                item.getProduct().getCategory(),
-                                item.getProduct().getStatus(),
-                                item.getProduct().getCreatedAt() != null ? item.getProduct().getCreatedAt().toString() : null,
-                                item.getProduct().getUpdatedAt() != null ? item.getProduct().getUpdatedAt().toString() : null,
-                                item.getProduct().getCantidadProducto()
-                        ),
-                        item.getQuantity()
-                ))
-                .toList();
+        List<CartItemResponse> items = cart.getItems() == null ? List.of() :
+                cart.getItems().stream()
+                        .filter(item -> item != null && item.getProduct() != null)
+                        .map(item -> new CartItemResponse(
+                                item.getId(),
+                                new ProductResponse(
+                                        item.getProduct().getId(),
+                                        item.getProduct().getName(),
+                                        item.getProduct().getDescription(),
+                                        item.getProduct().getPrice(),
+                                        item.getProduct().getStock(),
+                                        item.getProduct().getImageUrl(),
+                                        item.getProduct().getCategory(),
+                                        item.getProduct().getStatus(),
+                                        item.getProduct().getCreatedAt() != null ? item.getProduct().getCreatedAt().toString() : null,
+                                        item.getProduct().getUpdatedAt() != null ? item.getProduct().getUpdatedAt().toString() : null,
+                                        item.getProduct().getCantidadProducto()
+                                ),
+                                item.getQuantity()
+                        ))
+                        .toList();
 
         CartResponse cartResponse = new CartResponse(
                 cart.getId(),
@@ -112,6 +114,12 @@ public class CartController {
             }
             cart.setToken(cartToken);
             cartRepository.save(cart);
+        } else if (cart.getToken() == null || cart.getToken().isBlank()) {
+            // Si el carrito existe pero no tiene token, asígnale uno
+            String newToken = java.util.UUID.randomUUID().toString();
+            cart.setToken(newToken);
+            cartRepository.save(cart);
+            cartToken = newToken;
         }
 
         Optional<Product> productOpt = productRepository.findById(productId);
@@ -136,25 +144,27 @@ public class CartController {
         }
         cartRepository.save(cart);
 
-        List<CartItemResponse> items = cart.getItems().stream()
-                .map(ci -> new CartItemResponse(
-                        ci.getId(),
-                        new ProductResponse(
-                                ci.getProduct().getId(),
-                                ci.getProduct().getName(),
-                                ci.getProduct().getDescription(),
-                                ci.getProduct().getPrice(),
-                                ci.getProduct().getStock(),
-                                ci.getProduct().getImageUrl(),
-                                ci.getProduct().getCategory(),
-                                ci.getProduct().getStatus(),
-                                ci.getProduct().getCreatedAt() != null ? ci.getProduct().getCreatedAt().toString() : null,
-                                ci.getProduct().getUpdatedAt() != null ? ci.getProduct().getUpdatedAt().toString() : null,
-                                ci.getProduct().getCantidadProducto()
-                        ),
-                        ci.getQuantity()
-                ))
-                .toList();
+        List<CartItemResponse> items = cart.getItems() == null ? List.of() :
+                cart.getItems().stream()
+                        .filter(ci -> ci != null && ci.getProduct() != null)
+                        .map(ci -> new CartItemResponse(
+                                ci.getId(),
+                                new ProductResponse(
+                                        ci.getProduct().getId(),
+                                        ci.getProduct().getName(),
+                                        ci.getProduct().getDescription(),
+                                        ci.getProduct().getPrice(),
+                                        ci.getProduct().getStock(),
+                                        ci.getProduct().getImageUrl(),
+                                        ci.getProduct().getCategory(),
+                                        ci.getProduct().getStatus(),
+                                        ci.getProduct().getCreatedAt() != null ? ci.getProduct().getCreatedAt().toString() : null,
+                                        ci.getProduct().getUpdatedAt() != null ? ci.getProduct().getUpdatedAt().toString() : null,
+                                        ci.getProduct().getCantidadProducto()
+                                ),
+                                ci.getQuantity()
+                        ))
+                        .toList();
 
         CartResponse cartResponse = new CartResponse(
                 cart.getId(),

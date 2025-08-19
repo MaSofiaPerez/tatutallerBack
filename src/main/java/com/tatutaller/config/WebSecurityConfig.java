@@ -78,6 +78,7 @@ public class WebSecurityConfig {
                         .requestMatchers("/api/imagenes/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/api/pedidos/checkout").permitAll()
                         .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "TEACHER")
                         .requestMatchers("/api/auth/**").authenticated()
                         .anyRequest().authenticated());
