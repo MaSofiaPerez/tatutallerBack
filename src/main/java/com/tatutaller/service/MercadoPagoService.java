@@ -49,9 +49,9 @@ public class MercadoPagoService {
         ).collect(Collectors.toList());
 
         PreferenceBackUrlsRequest backUrls = PreferenceBackUrlsRequest.builder()
-            .success("https://tu-frontend.com/pago/success")
-            .pending("https://tu-frontend.com/pago/pending")
-            .failure("https://tu-frontend.com/pago/failure")
+            .success("https://6704f5cca7d0.ngrok-free.app/")
+            .pending("https://6704f5cca7d0.ngrok-free.app/")
+            .failure("https://6704f5cca7d0.ngrok-free.app/")
             .build();
 
         PreferenceRequest preferenceRequest = PreferenceRequest.builder()
@@ -69,6 +69,6 @@ public class MercadoPagoService {
         if (pedido == null) {
             throw new IllegalArgumentException("Pedido no encontrado para externalReference: " + externalReference);
         }
-        return crearPreferenciaDesdeCarrito(pedido.getItemsSnapshot());
+        return crearPreferenciaDesdeCarrito(pedido.getItemsSnapshot(),pedido.getMontoTotal());
     }
 }

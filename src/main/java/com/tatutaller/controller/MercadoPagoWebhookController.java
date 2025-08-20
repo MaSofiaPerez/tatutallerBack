@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
 
 import java.util.Map;
 
@@ -55,8 +56,8 @@ public class MercadoPagoWebhookController {
                 httpHeaders.setBearerAuth("APP_USR-1443611189943243-080918-c39ceca6b0f7b5dd0eca5957558699e4-1561567594");
                 HttpEntity<Void> entity = new HttpEntity<>(httpHeaders);
 
-                ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET, entity, Map.class);
-                Map paymentData = response.getBody();
+                ResponseEntity<Map<String, Object>> response = restTemplate.exchange(url, HttpMethod.GET, entity, new ParameterizedTypeReference<Map<String, Object>>() {});
+                Map<String, Object> paymentData = response.getBody();
                 String status = (String) paymentData.get("status");
                 String externalReference = (String) paymentData.get("external_reference");
 
