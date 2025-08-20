@@ -106,14 +106,28 @@ public class CartController {
             cart = cartRepository.findByToken(cartToken).orElse(null);
         }
 
+        // Validar que no se cree un carrito con un token duplicado
         if (cart == null) {
-            cart = new Cart();
-            cart.setUser(user); // null si es anónimo
-            if (cartToken == null || cartToken.isBlank()) {
-                cartToken = java.util.UUID.randomUUID().toString();
+            if (cartToken != null && !cartToken.isBlank()) {
+                // Si el token ya existe, no crear un nuevo carrito, devolver el existente
+                Optional<Cart> existingCart = cartRepository.findByToken(cartToken);
+                if (existingCart.isPresent()) {
+                    cart = existingCart.get();
+                } else {
+                    cart = new Cart();
+                    cart.setUser(user); // null si es anónimo
+                    cart.setToken(cartToken);
+                    cartRepository.save(cart);
+                }
+            } else {
+                // Generar un token único
+                String newToken = java.util.UUID.randomUUID().toString();
+                cart = new Cart();
+                cart.setUser(user); // null si es anónimo
+                cart.setToken(newToken);
+                cartRepository.save(cart);
+                cartToken = newToken;
             }
-            cart.setToken(cartToken);
-            cartRepository.save(cart);
         } else if (cart.getToken() == null || cart.getToken().isBlank()) {
             // Si el carrito existe pero no tiene token, asígnale uno
             String newToken = java.util.UUID.randomUUID().toString();
