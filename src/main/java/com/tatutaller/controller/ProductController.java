@@ -128,8 +128,16 @@ public class ProductController {
             Product updatedProduct = productRepository.save(product);
             return ResponseEntity.ok(updatedProduct);
 
+        } catch (org.springframework.web.multipart.MaxUploadSizeExceededException ex) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "message", "La imagen supera el tamaño máximo permitido.",
+                "error", ex.getMessage()
+            ));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Error al actualizar el producto", "error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of(
+                "message", "Error al actualizar el producto",
+                "error", e.getMessage()
+            ));
         }
     }
 
