@@ -35,8 +35,13 @@ public class MercadoPagoService {
 
         double factorDescuento = (montoTotalCarrito > 0) ? (montoTotalPedido / montoTotalCarrito) : 1.0;
 
-        List<PreferenceItemRequest> items = carrito.stream().map(item ->
-            PreferenceItemRequest.builder()
+        List<PreferenceItemRequest> items = carrito.stream().map(item -> {
+            CartItem snap = new CartItem();
+            snap.setProduct(item.getProduct());
+            snap.setQuantity(item.getQuantity());
+            // NO setees snap.setCart(...)
+
+            return PreferenceItemRequest.builder()
                 .id(String.valueOf(item.getId()))
                 .title(item.getProduct().getName())
                 .description(item.getProduct().getDescription())
@@ -45,13 +50,13 @@ public class MercadoPagoService {
                 .quantity(item.getQuantity())
                 .currencyId("UYU")
                 .unitPrice(item.getProduct().getPrice().multiply(java.math.BigDecimal.valueOf(factorDescuento)))
-                .build()
-        ).collect(Collectors.toList());
+                .build();
+        }).collect(Collectors.toList());
 
         PreferenceBackUrlsRequest backUrls = PreferenceBackUrlsRequest.builder()
-            .success("https://6704f5cca7d0.ngrok-free.app/")
-            .pending("https://6704f5cca7d0.ngrok-free.app/")
-            .failure("https://6704f5cca7d0.ngrok-free.app/")
+            .success("https://06d8152bff2b.ngrok-free.app/")
+            .pending("https://06d8152bff2b.ngrok-free.app/")
+            .failure("https://06d8152bff2b.ngrok-free.app/")
             .build();
 
         PreferenceRequest preferenceRequest = PreferenceRequest.builder()
