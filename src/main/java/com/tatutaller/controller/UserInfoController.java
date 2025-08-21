@@ -23,7 +23,7 @@ import com.tatutaller.dto.response.UserProfileResponse;
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/users")
-@PreAuthorize("hasAnyRole('USER', 'TEACHER', 'ADMIN')")
+@PreAuthorize("hasAnyRole('USER', 'TEACHER', 'ADMIN','CLIENTE')")
 public class UserInfoController {
 
     @Autowired

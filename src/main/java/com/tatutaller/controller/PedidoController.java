@@ -8,8 +8,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -19,6 +22,7 @@ public class PedidoController {
     private final PedidoService pedidoService;
     private final MercadoPagoService mercadoPagoService;
 
+    @Autowired
     public PedidoController(PedidoService pedidoService, MercadoPagoService mercadoPagoService) {
         this.pedidoService = pedidoService;
         this.mercadoPagoService = mercadoPagoService;
@@ -46,10 +50,10 @@ public class PedidoController {
         }
     }
 
-     @PostMapping("/checkout")
+    @PostMapping("/checkout")
     public ResponseEntity<?> crearPedidoYPreferencia(@Valid @RequestBody Map<String, Object> payload) {
-         String email = (String) payload.get("email");
-         if (email == null || email.isBlank()) {
+        String email = (String) payload.get("email");
+        if (email == null || email.isBlank()) {
             return ResponseEntity.badRequest().body(Map.of("error", "Email es requerido"));
         }
         try {
@@ -58,9 +62,9 @@ public class PedidoController {
             PedidoResponse pedidoResponse = new PedidoResponse(pedido);
 
             // 2. Crear preferencia de Mercado Pago directamente
-             var preferencia = mercadoPagoService.crearPreferenciaDesdeCarrito(pedido.getItemsSnapshot(),pedido.getMontoTotal());
+            var preferencia = mercadoPagoService.crearPreferenciaDesdeCarrito(pedido.getItemsSnapshot(),pedido.getMontoTotal());
             if (preferencia == null || preferencia.getInitPoint() == null) {
-             return ResponseEntity.badRequest().body(Map.of("error", "No se pudo generar la preferencia de pago"));
+                return ResponseEntity.badRequest().body(Map.of("error", "No se pudo generar la preferencia de pago"));
             }
 
             // 3. Devolver ambos datos al frontend
@@ -76,41 +80,64 @@ public class PedidoController {
                 "details", e.getMessage()
             ));
         }
-     }
+    }
 
-// @PostMapping("/checkout")
-// public ResponseEntity<?> crearPedidoYPreferencia(@Valid @RequestBody Map<String, Object> payload) {
-//     String email = (String) payload.get("email");
-//     if (email == null || email.isBlank()) {
-//         return ResponseEntity.badRequest().body(Map.of("error", "Email es requerido"));
-//     }
-//     try {
-//         // 1. Crear el pedido en base al email recibido
-//         Pedido pedido = pedidoService.crearPedidoPorEmail(email);
-//         PedidoResponse pedidoResponse = new PedidoResponse(pedido);
+    @GetMapping("/admin")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<PedidoResponse>> getAllPedidos() {
+        List<PedidoResponse> pedidos = pedidoService.obtenerTodosPedidos()
+            .stream().map(PedidoResponse::new).toList();
+        return ResponseEntity.ok(pedidos);
+    }
 
-//         // 2. Crear la preferencia de Mercado Pago usando los items y el monto total del pedido
-//         var preferencia = mercadoPagoService.crearPreferenciaDesdeCarrito(
-//             pedido.getItemsSnapshot(),
-//             pedido.getMontoTotal()
-//         );
-//         // 3. Validar que la preferencia fue creada correctamente
-//         if (preferencia == null || preferencia.getSandboxInitPoint() == null) {
-//             return ResponseEntity.badRequest().body(Map.of("error", "No se pudo generar la preferencia de pago"));
-//         }
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getPedidoById(@PathVariable Long id) {
+        Optional<Pedido> pedidoOpt = pedidoService.obtenerPedidoConSnapshot(id);
+        if (pedidoOpt.isEmpty()) return ResponseEntity.notFound().build();
+        Pedido pedido = pedidoOpt.get();
+        return ResponseEntity.ok(new PedidoResponse(pedido));
+    }
 
-//         // 4. Devolver ambos datos al frontend, usando el sandbox_init_point para entorno de pruebas
-//         return ResponseEntity.ok(Map.of(
-//             "pedido", pedidoResponse,
-//             "externalReference", pedido.getExternalReference(),
-//             "init_point", preferencia.getSandboxInitPoint()
-//         ));
-//     } catch (Exception e) {
-//         return ResponseEntity.status(500).body(Map.of(
-//             "error", "No se pudo crear el pedido y la preferencia",
-//             "details", e.getMessage()
-//         ));
-//     }
-// }
+    @PutMapping("/admin/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> updatePedido(@PathVariable Long id, @Valid @RequestBody Pedido updated) {
+        Optional<Pedido> pedidoOpt = pedidoService.obtenerPedidoConSnapshot(id);
+        if (pedidoOpt.isEmpty()) return ResponseEntity.notFound().build();
+        Pedido pedido = pedidoOpt.get();
 
+        pedido.setEstado(updated.getEstado());
+        pedido.setMontoTotal(updated.getMontoTotal());
+        // Puedes agregar más campos editables aquí
+
+        pedidoService.guardarPedido(pedido);
+        return ResponseEntity.ok(new PedidoResponse(pedido));
+    }
+
+    @DeleteMapping("/admin/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> deletePedido(@PathVariable Long id) {
+        if (!pedidoService.existePedido(id)) return ResponseEntity.notFound().build();
+        pedidoService.eliminarPedido(id);
+        return ResponseEntity.ok(Map.of("message", "Pedido eliminado"));
+    }
+
+    @GetMapping("/usuario/{email}")
+    public ResponseEntity<List<PedidoResponse>> getPedidosPorUsuario(@PathVariable String email) {
+        List<PedidoResponse> pedidos = pedidoService.obtenerPedidosPorEmail(email)
+            .stream().map(PedidoResponse::new).toList();
+        return ResponseEntity.ok(pedidos);
+    }
+
+    @GetMapping("/{id}/snapshot")
+    public ResponseEntity<?> getPedidoSnapshot(@PathVariable Long id) {
+        return pedidoService.obtenerPedidoConSnapshot(id)
+            .map(pedido -> ResponseEntity.ok(Map.of(
+                "pedidoId", pedido.getId(),
+                "estado", pedido.getEstado(),
+                "fecha", pedido.getFecha(),
+                "montoTotal", pedido.getMontoTotal(),
+                "itemsSnapshot", pedido.getItemsSnapshot()
+            )))
+            .orElse(ResponseEntity.notFound().build());
+    }
 }
