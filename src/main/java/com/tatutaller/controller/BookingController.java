@@ -62,7 +62,7 @@ public class BookingController {
 
     // Endpoint para crear reserva (usuario autenticado)
     @PostMapping("/bookings")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('CLIENTE')")
     public ResponseEntity<?> createBooking(@Valid @RequestBody BookingRequest bookingRequest,
             Authentication authentication) {
         try {
@@ -165,7 +165,7 @@ public class BookingController {
 
     // Endpoint para obtener reservas del usuario autenticado
     @GetMapping("/my-bookings")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('CLIENTE')")
     public ResponseEntity<List<BookingResponse>> getMyBookings(Authentication authentication) {
         UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
         Optional<User> user = userRepository.findByEmail(userPrincipal.getEmail());
@@ -254,7 +254,7 @@ public class BookingController {
 
     // Endpoint para enviar notificación por email al profesor
     @PostMapping("/bookings/notify-teacher")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('CLIENTE')")
     public ResponseEntity<Map<String, Object>> notifyTeacher(@Valid @RequestBody BookingNotificationRequest request) {
         Map<String, Object> response = new HashMap<>();
 
@@ -318,7 +318,7 @@ public class BookingController {
 
     // Endpoint de prueba para verificar que las notificaciones funcionan
     @PostMapping("/bookings/notify-teacher-test")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('CLIENTE')")
     public ResponseEntity<Map<String, Object>> notifyTeacherTest(@RequestBody Map<String, Object> request) {
         Map<String, Object> response = new HashMap<>();
 
