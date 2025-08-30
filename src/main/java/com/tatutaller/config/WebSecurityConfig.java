@@ -71,9 +71,11 @@ public class WebSecurityConfig {
                             "/api/auth/google",
                             "/api/auth/debug/**",
                             "/api/auth/verify",
-                             "/api/auth/reset-password"
+                            "/api/auth/reset-password",
+                            "/actuator/health", // <-- Permitir health check explícito
+                            "/"
                         ).permitAll()
-                        .requestMatchers("/api/cart/**").permitAll() // <--- acceso libre a este endpoint
+                        .requestMatchers("/api/cart/**").permitAll()
                         .requestMatchers("/api/public/**").permitAll()
                         .requestMatchers("/api/imagenes/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
@@ -95,7 +97,14 @@ public class WebSecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
+        configuration.setAllowedOrigins(Arrays.asList(
+            "https://tatutaller.com.uy",
+            "https://www.tatutaller.com.uy",
+            "https://*.amplifyapp.com" // Si usás previews de Amplify, podés usar allowedOriginPatterns
+        ));
+        configuration.setAllowedOriginPatterns(Arrays.asList(
+            "https://*.amplifyapp.com"
+        ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
