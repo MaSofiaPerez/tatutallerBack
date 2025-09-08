@@ -154,7 +154,7 @@
             console.log('📤 Datos a enviar:', userData);
             
             try {
-                const response = await fetch('http://localhost:8080/api/admin/users', {
+                const response = await fetch('https://www.tatutaller.com.uy//api/admin/users', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -206,7 +206,7 @@
                     <div class="error">
                         <strong>❌ Error de conexión</strong><br><br>
                         ${error.message}<br><br>
-                        Asegúrate de que el servidor esté corriendo en http://localhost:8080
+                        Asegúrate de que el servidor esté corriendo en https://www.tatutaller.com.uy/
                     </div>
                 `;
             }
