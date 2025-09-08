@@ -188,8 +188,7 @@ public class EmailService {
             context.setVariable("userName", userName);
             context.setVariable("userEmail", userEmail);
             context.setVariable("temporaryPassword", temporaryPassword);
-            context.setVariable("loginUrl", "http://localhost:3000/login");
-
+            context.setVariable("loginUrl", "https://www.tatutaller.com.uy/login");
             sendHtmlEmail(userEmail, "Credenciales de acceso - TatuTaller", "temporary-password-email", context);
         } catch (Exception e) {
             System.err.println("Error enviando email HTML, enviando texto plano: " + e.getMessage());

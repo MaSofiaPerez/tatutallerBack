@@ -57,24 +57,22 @@ public class PedidoController {
             return ResponseEntity.badRequest().body(Map.of("error", "Email es requerido"));
         }
         try {
-            // 1. Crear el pedido
             Pedido pedido = pedidoService.crearPedidoPorEmail(email);
             PedidoResponse pedidoResponse = new PedidoResponse(pedido);
 
-            // 2. Crear preferencia de Mercado Pago directamente
-            var preferencia = mercadoPagoService.crearPreferenciaDesdeCarrito(pedido.getItemsSnapshot(),pedido.getMontoTotal());
+            var preferencia = mercadoPagoService.crearPreferenciaDesdeCarrito(
+                pedido.getItemsSnapshot(), pedido.getMontoTotal());
             if (preferencia == null || preferencia.getInitPoint() == null) {
                 return ResponseEntity.badRequest().body(Map.of("error", "No se pudo generar la preferencia de pago"));
             }
 
-            // 3. Devolver ambos datos al frontend
             return ResponseEntity.ok(Map.of(
                 "pedido", pedidoResponse,
                 "externalReference", pedido.getExternalReference(),
                 "init_point", preferencia.getInitPoint()
             ));
         } catch (Exception e) {
-            e.printStackTrace(); // <--- Agrega esto para ver el error real en la consola
+            e.printStackTrace();
             return ResponseEntity.status(500).body(Map.of(
                 "error", "No se pudo crear el pedido y la preferencia",
                 "details", e.getMessage()

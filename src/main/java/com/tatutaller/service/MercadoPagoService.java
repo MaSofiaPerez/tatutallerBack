@@ -5,6 +5,8 @@ import com.mercadopago.client.preference.PreferenceBackUrlsRequest;
 import com.mercadopago.client.preference.PreferenceClient;
 import com.mercadopago.client.preference.PreferenceItemRequest;
 import com.mercadopago.client.preference.PreferenceRequest;
+import com.mercadopago.exceptions.MPApiException;
+import com.mercadopago.exceptions.MPException;
 import com.mercadopago.resources.preference.Preference;
 import com.tatutaller.entity.CartItem;
 import com.tatutaller.entity.Pedido;
@@ -28,39 +30,23 @@ public class MercadoPagoService {
         this.pedidoRepository = pedidoRepository;
     }
 
-    public Preference crearPreferenciaDesdeCarrito(List<CartItem> carrito, double montoTotalPedido) throws Exception {
-        double montoTotalCarrito = carrito.stream()
-            .mapToDouble(item -> item.getProduct().getPrice().doubleValue() * item.getQuantity())
-            .sum();
-
-        double factorDescuento = (montoTotalCarrito > 0) ? (montoTotalPedido / montoTotalCarrito) : 1.0;
-
-        List<PreferenceItemRequest> items = carrito.stream().map(item -> {
-            CartItem snap = new CartItem();
-            snap.setProduct(item.getProduct());
-            snap.setQuantity(item.getQuantity());
-            // NO setees snap.setCart(...)
-
-            return PreferenceItemRequest.builder()
-                .id(String.valueOf(item.getId()))
+    public Preference crearPreferenciaDesdeCarrito(List<CartItem> items, double montoTotal) throws MPException, MPApiException {
+        List<PreferenceItemRequest> mpItems = items.stream().map((CartItem item) -> 
+            PreferenceItemRequest.builder()
                 .title(item.getProduct().getName())
-                .description(item.getProduct().getDescription())
-                .pictureUrl(item.getProduct().getImageUrl())
-                .categoryId(item.getProduct().getCategory() != null ? item.getProduct().getCategory().name() : null)
                 .quantity(item.getQuantity())
-                .currencyId("UYU")
-                .unitPrice(item.getProduct().getPrice().multiply(java.math.BigDecimal.valueOf(factorDescuento)))
-                .build();
-        }).collect(Collectors.toList());
+                .unitPrice(item.getProduct().getPrice())
+                .build()
+        ).collect(Collectors.toList());
 
         PreferenceBackUrlsRequest backUrls = PreferenceBackUrlsRequest.builder()
-            .success("https://06d8152bff2b.ngrok-free.app/")
-            .pending("https://06d8152bff2b.ngrok-free.app/")
-            .failure("https://06d8152bff2b.ngrok-free.app/")
+            .success("https://www.tatutaller.com.uy/pago/success")
+            .pending("https://www.tatutaller.com.uy/pago/pending")
+            .failure("https://www.tatutaller.com.uy/pago/failure")
             .build();
 
         PreferenceRequest preferenceRequest = PreferenceRequest.builder()
-            .items(items)
+            .items(mpItems)
             .backUrls(backUrls)
             .autoReturn("approved")
             .build();
@@ -68,6 +54,8 @@ public class MercadoPagoService {
         PreferenceClient client = new PreferenceClient();
         return client.create(preferenceRequest);
     }
+
+  
 
     public Preference crearPreferenciaPorExternalReference(String externalReference) throws Exception {
         Pedido pedido = pedidoRepository.findByExternalReference(externalReference);

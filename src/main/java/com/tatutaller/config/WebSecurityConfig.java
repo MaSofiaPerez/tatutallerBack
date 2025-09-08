@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -20,9 +21,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.http.HttpMethod;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Configuration
 @EnableWebSecurity
@@ -30,10 +33,11 @@ import java.util.Arrays;
 public class WebSecurityConfig {
 
     @Autowired
-    UserDetailsServiceImpl userDetailsService;
+    private UserDetailsServiceImpl userDetailsService;
 
-    @Value("${cors.allowed-origins}")
-    private String allowedOrigins;
+    // Default incluye dev y prod. Si definís la prop en application.properties, la usa.
+    @Value("${cors.allowed-origins:http://localhost:5173,https://www.tatutaller.com.uy,https://tatutaller.com.uy,https://app.tatutaller.com.uy,https://*.tatutaller.com.uy}")
+    private String allowedOriginsProp;
 
     @Bean
     public AuthTokenFilter authenticationJwtTokenFilter() {
@@ -60,58 +64,69 @@ public class WebSecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                            "/api/auth/login",
-                            "/api/auth/register",
-                            "/api/auth/login-google",
-                            "/api/auth/google",
-                            "/api/auth/debug/**",
-                            "/api/auth/verify",
-                            "/api/auth/reset-password",
-                            "/actuator/health", // <-- Permitir health check explícito
-                            "/"
-                        ).permitAll()
-                        .requestMatchers("/api/cart/**").permitAll()
-                        .requestMatchers("/api/public/**").permitAll()
-                        .requestMatchers("/api/imagenes/**").permitAll()
-                        .requestMatchers("/h2-console/**").permitAll()
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/pedidos/checkout").permitAll()
-                        .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "TEACHER")
-                        .requestMatchers("/api/auth/**").authenticated()
-                        .anyRequest().authenticated());
+        http
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .csrf(csrf -> csrf.disable())
+            .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth
+                // preflight y health libres
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers("/actuator/health", "/").permitAll()
+
+                // auth público
+                .requestMatchers(
+                    "/api/auth/login",
+                    "/api/auth/register",
+                    "/api/auth/login-google",
+                    "/api/auth/google",
+                    "/api/auth/debug/**",
+                    "/api/auth/verify",
+                    "/api/auth/reset-password"
+                ).permitAll()
+
+                // endpoints públicos de la app
+                .requestMatchers("/api/cart/**").permitAll()
+                .requestMatchers("/api/public/**").permitAll()
+                .requestMatchers("/api/imagenes/**").permitAll()
+                .requestMatchers("/h2-console/**").permitAll()
+                .requestMatchers("/api/pedidos/checkout").permitAll()
+
+                // roles
+                .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "TEACHER")
+                .requestMatchers("/api/auth/**").authenticated()
+
+                // resto autenticado
+                .anyRequest().authenticated()
+            );
 
         http.authenticationProvider(authenticationProvider());
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
 
-        // Para H2 console
+        // Para H2 console en dev
         http.headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
 
         return http.build();
     }
 
     @Bean
-    CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList(
-            "https://tatutaller.com.uy",
-            "https://www.tatutaller.com.uy",
-            "https://*.amplifyapp.com" // Si usás previews de Amplify, podés usar allowedOriginPatterns
-        ));
-        configuration.setAllowedOriginPatterns(Arrays.asList(
-            "https://*.amplifyapp.com"
-        ));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
-        configuration.setAllowCredentials(true);
-        configuration.setExposedHeaders(Arrays.asList("Authorization"));
+    public CorsConfigurationSource corsConfigurationSource() {
+        // Admite lista explícita y comodines (ej: https://*.tatutaller.com.uy)
+        List<String> origins = Stream.of(allowedOriginsProp.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toList());
+
+        CorsConfiguration config = new CorsConfiguration();
+        // Usamos originPatterns para soportar comodines
+        config.setAllowedOriginPatterns(origins);
+        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setExposedHeaders(Arrays.asList("Location", "Content-Disposition"));
+        config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+        source.registerCorsConfiguration("/**", config);
         return source;
     }
 }
