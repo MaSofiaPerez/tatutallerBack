@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.tatutaller.repository.CartItemRepository;
+
 @Entity
 @Table(name = "pedidos")
 public class Pedido {
@@ -55,4 +57,10 @@ public class Pedido {
     public void setMontoTotal(Double montoTotal) { this.montoTotal = montoTotal; }
     public String getExternalReference() { return externalReference; }
     public void setExternalReference(String externalReference) { this.externalReference = externalReference; }
+
+    public void deleteItems(CartItemRepository cartItemRepository) {
+        for (CartItem item : itemsSnapshot) {
+            cartItemRepository.delete(item);
+        }
+    }
 }
