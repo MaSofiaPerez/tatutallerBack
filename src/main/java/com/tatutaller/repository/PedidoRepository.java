@@ -10,5 +10,6 @@ import org.springframework.stereotype.Repository;
 public interface PedidoRepository extends JpaRepository<Pedido, Long> {
     Pedido findByExternalReference(String externalReference);
     List<Pedido> findAllByUsuario(User usuario);
+    List<Pedido> findByUsuarioId(Long id);
     
 }

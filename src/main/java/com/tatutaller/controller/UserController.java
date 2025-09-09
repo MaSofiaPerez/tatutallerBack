@@ -4,8 +4,14 @@ import com.tatutaller.entity.Cart;
 import com.tatutaller.entity.User;
 import com.tatutaller.repository.CartRepository;
 import com.tatutaller.repository.UserRepository;
+import com.tatutaller.repository.CartItemRepository;
 import com.tatutaller.service.PasswordGeneratorService;
 import com.tatutaller.service.EmailService;
+import com.tatutaller.entity.ClassEntity;
+import com.tatutaller.entity.Pedido;
+import com.tatutaller.repository.ClassRepository;
+import com.tatutaller.repository.PedidoRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,20 +28,28 @@ import java.util.Optional;
 @PreAuthorize("hasRole('ADMIN')")
 public class UserController {
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private CartRepository cartRepository;
+    private final UserRepository userRepository;
+    private final CartRepository cartRepository;
+    private final CartItemRepository cartItemRepository;
+    private final ClassRepository classRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
     private PasswordGeneratorService passwordGeneratorService;
+    @Autowired
+    private PedidoRepository pedidoRepository;
 
     @Autowired
     private EmailService emailService;
+
+    public UserController(UserRepository userRepository, CartRepository cartRepository, CartItemRepository cartItemRepository, ClassRepository classRepository) {
+        this.userRepository = userRepository;
+        this.cartRepository = cartRepository;
+        this.cartItemRepository = cartItemRepository;
+        this.classRepository = classRepository;
+    }
 
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
@@ -77,8 +91,21 @@ public class UserController {
             return ResponseEntity.notFound().build();
         }
 
+        // Eliminar las clases donde el usuario es instructor
+        List<ClassEntity> clasesDelUsuario = classRepository.findByInstructorId(id);
+        for (ClassEntity clase : clasesDelUsuario) {
+            classRepository.delete(clase);
+        }
+
         // Eliminar el carrito asociado si existe
-        cartRepository.findByUserId(id).ifPresent(cartRepository::delete);
+        cartRepository.findByUserId(id).ifPresent(cart -> {
+            if (cart.getItems() != null && !cart.getItems().isEmpty()) {
+                cart.getItems().forEach(cartItem -> cartItemRepository.deleteById(cartItem.getId()));
+            }
+            cartRepository.delete(cart);
+        });
+
+       
 
         // Ahora sí, eliminar el usuario
         userRepository.deleteById(id);

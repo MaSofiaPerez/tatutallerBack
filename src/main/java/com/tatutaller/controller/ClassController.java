@@ -140,7 +140,7 @@ public class ClassController {
     }
 
     @PostMapping("/admin/classes")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     public ResponseEntity<?> createClass(@Valid @RequestBody CreateClassRequest request) {
         try {
             User teacher = userService.findById(request.getTeacherId());
@@ -174,7 +174,7 @@ public class ClassController {
     }
 
     @PutMapping("/admin/classes/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     public ResponseEntity<?> updateClass(@PathVariable Long id,
             @Valid @RequestBody CreateClassRequest request) {
         try {
@@ -220,7 +220,7 @@ public class ClassController {
     }
 
     @DeleteMapping("/admin/classes/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     public ResponseEntity<?> deleteClass(@PathVariable Long id) {
         if (classRepository.existsById(id)) {
             classRepository.deleteById(id);
@@ -307,12 +307,12 @@ public class ClassController {
                         return currentSlotStart.isBefore(bookedEnd) && currentSlotEnd.isAfter(bookedStart);
                     });
 
-            // Verificar cupo máximo para este slot
-            if (isAvailable && classEntity.getMaxCapacity() != null) {
-                Long overlappingBookings = bookingRepository.countOverlappingBookings(
-                        classEntity.getId(), date, currentSlotStart, currentSlotEnd);
-                isAvailable = overlappingBookings < classEntity.getMaxCapacity();
-            }
+            // --- Elimina esta validación de cupo máximo ---
+            // if (isAvailable && classEntity.getMaxCapacity() != null) {
+            //     Long overlappingBookings = bookingRepository.countOverlappingBookings(
+            //             classEntity.getId(), date, currentSlotStart, currentSlotEnd);
+            //     isAvailable = overlappingBookings < classEntity.getMaxCapacity();
+            // }
 
             slots.add(new TimeSlotResponse(currentSlotStart, currentSlotEnd, isAvailable));
             current = current.plusMinutes(30);
@@ -413,7 +413,7 @@ public class ClassController {
     }
 
     @GetMapping("/admin/classes/{id}/reservations")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN')")
     public ResponseEntity<?> getClassReservations(@PathVariable Long id) {
         try {
             Optional<ClassEntity> classEntity = classRepository.findById(id);

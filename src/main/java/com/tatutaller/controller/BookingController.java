@@ -67,14 +67,27 @@ public class BookingController {
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('CLIENTE')")
     public ResponseEntity<?> createBooking(@Valid @RequestBody BookingRequest bookingRequest,
             Authentication authentication) {
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        Optional<User> user = userRepository.findByEmail(userPrincipal.getEmail());
+
+        if (user.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Usuario no encontrado"));
+        }
+
+        // 🚫 Validar que el usuario NO sea CLIENTE
+        if (user.get().getRole() == User.Role.CLIENTE) {
+            return ResponseEntity.status(403).body(Map.of(
+                "success", false,
+                "error", "Reserva rechazada",
+                "message", "Necesita ser Alumno para reservar. Contáctese con el Taller."
+            ));
+        }
+
         // Agrega estos logs aquí:
         System.out.println("bookingDate: " + bookingRequest.getBookingDate());
         System.out.println("recurrenceEndDate: " + bookingRequest.getRecurrenceEndDate());
 
         try {
-            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-            Optional<User> user = userRepository.findByEmail(userPrincipal.getEmail());
-
             if (user.isPresent()) {
                 Optional<ClassEntity> classEntity = classRepository.findById(bookingRequest.getClassId());
                 if (classEntity.isPresent()) {
