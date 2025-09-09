@@ -117,34 +117,47 @@ public class BookingController {
 
                     // Crear la reserva si pasa todas las validaciones
                     if (bookingRequest.getBookingType().equals("RECURRENTE")) {
-                        if (bookingRequest.getRecurrenceEndDate() == null ||
-                            bookingRequest.getRecurrenceEndDate().isBefore(bookingRequest.getBookingDate())) {
+                        LocalDate bookingDate = bookingRequest.getBookingDate();
+                        LocalDate recurrenceEndDate = bookingRequest.getRecurrenceEndDate();
+
+                        
+                            recurrenceEndDate = getLastWeekdayOfMonth(
+                                bookingDate.getYear(),
+                                bookingDate.getMonthValue(),
+                                bookingDate.getDayOfWeek()
+                            );
+                        
+
+                        if (recurrenceEndDate.isBefore(bookingDate)) {
                             Map<String, Object> response = new HashMap<>();
                             response.put("success", false);
                             response.put("error", "La fecha de fin de recurrencia debe ser igual o posterior a la fecha de inicio");
                             return ResponseEntity.badRequest().body(response);
                         }
-                        LocalDate current = bookingRequest.getBookingDate();
-                        LocalDate end = bookingRequest.getRecurrenceEndDate();
+                        LocalDate current = bookingDate;
                         List<BookingResponse> createdBookings = new ArrayList<>();
-                        while (!current.isAfter(end)) {
-                            Booking booking = new Booking();
-                            booking.setUser(user.get());
-                            booking.setClassEntity(classEntity.get());
-                            booking.setBookingDate(current);
-                            booking.setStartTime(bookingRequest.getStartTime());
-                            booking.setEndTime(bookingRequest.getEndTime());
-                            booking.setStatus(Booking.BookingStatus.PENDING);
-                            booking.setNotes(bookingRequest.getNotes());
-                            booking.setType(Booking.BookingType.RECURRENTE);
-                            booking.setCreatedAt(LocalDateTime.now());
-                            booking.setUpdatedAt(LocalDateTime.now());
-                            booking.setRecurrenceEndDate(end);
+                        while (!current.isAfter(recurrenceEndDate)) {
+                            // Validar si ya existe una reserva para este usuario, clase, fecha y hora
+                            boolean exists = bookingRepository.existsByUserAndClassEntityAndBookingDateAndStartTimeAndEndTimeAndType(
+                                user.get(), classEntity.get(), current, bookingRequest.getStartTime(), bookingRequest.getEndTime(), Booking.BookingType.RECURRENTE
+                            );
+                            if (!exists) {
+                                Booking booking = new Booking();
+                                booking.setUser(user.get());
+                                booking.setClassEntity(classEntity.get());
+                                booking.setBookingDate(current);
+                                booking.setStartTime(bookingRequest.getStartTime());
+                                booking.setEndTime(bookingRequest.getEndTime());
+                                booking.setStatus(Booking.BookingStatus.PENDING);
+                                booking.setNotes(bookingRequest.getNotes());
+                                booking.setType(Booking.BookingType.RECURRENTE);
+                                booking.setCreatedAt(LocalDateTime.now());
+                                booking.setUpdatedAt(LocalDateTime.now());
+                                booking.setRecurrenceEndDate(recurrenceEndDate);
 
-                            Booking savedBooking = bookingRepository.save(booking);
-                            createdBookings.add(toBookingResponse(savedBooking));
-
-                            // (Opcional) Enviar email al profesor aquí si quieres notificar por cada reserva
+                                Booking savedBooking = bookingRepository.save(booking);
+                                createdBookings.add(toBookingResponse(savedBooking));
+                            }
                             current = current.plusWeeks(1);
                         }
                         return ResponseEntity.ok(createdBookings);
@@ -409,4 +422,13 @@ public class BookingController {
         response.put("count", count);
         return ResponseEntity.ok(response);
     }
+
+    // Calcula la última fecha de un día de la semana en un mes y año dados
+private LocalDate getLastWeekdayOfMonth(int year, int month, java.time.DayOfWeek dayOfWeek) {
+    LocalDate lastDay = LocalDate.of(year, month, 1).withDayOfMonth(LocalDate.of(year, month, 1).lengthOfMonth());
+    while (lastDay.getDayOfWeek() != dayOfWeek) {
+        lastDay = lastDay.minusDays(1);
+    }
+    return lastDay;
+}
 }

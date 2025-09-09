@@ -86,4 +86,9 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
   List<Booking> findByClassEntityId(Long classId);
 
   List<Booking> findByUserId(Long userId);
+
+  // BookingRepository.java
+boolean existsByUserAndClassEntityAndBookingDateAndStartTimeAndEndTimeAndType(
+    User user, ClassEntity classEntity, LocalDate bookingDate, LocalTime startTime, LocalTime endTime, Booking.BookingType type
+);
 }

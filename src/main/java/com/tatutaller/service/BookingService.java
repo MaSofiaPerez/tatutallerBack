@@ -41,10 +41,9 @@ public class BookingService {
         List<Booking> bookings = new ArrayList<>();
 
         if (Booking.BookingType.valueOf(request.getBookingType()) == Booking.BookingType.RECURRENTE) {
-            // Crear una reserva por semana, para el mismo día, entre bookingDate y recurrenceEndDate
+            // Crear exactamente 4 reservas semanales a partir de bookingDate
             LocalDate current = request.getBookingDate();
-            LocalDate end = request.getRecurrenceEndDate();
-            while (!current.isAfter(end)) {
+            for (int i = 0; i < 4; i++) {
                 Booking booking = new Booking();
                 booking.setUser(user);
                 booking.setClassEntity(classEntity);
@@ -52,7 +51,7 @@ public class BookingService {
                 booking.setStartTime(request.getStartTime());
                 booking.setEndTime(request.getEndTime());
                 booking.setType(Booking.BookingType.RECURRENTE);
-                booking.setRecurrenceEndDate(end);
+                booking.setRecurrenceEndDate(current.plusWeeks(3)); // Opcional: marca la última fecha
                 booking.setRecurrencePattern("WEEKLY");
                 booking.setStatus(Booking.BookingStatus.PENDING);
                 bookings.add(bookingRepository.save(booking));
