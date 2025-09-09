@@ -1,6 +1,9 @@
 package com.tatutaller.service;
 
 import java.util.NoSuchElementException;
+import java.util.ArrayList;
+import java.util.List;
+import java.time.LocalDate;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,30 +26,25 @@ public class BookingService {
     @Autowired
     private UserRepository userRepository;
 
-    public Booking createBooking(Long userId, BookingRequest request) {
-        // Validar que el usuario exista
+    public List<Booking> createBooking(Long userId, BookingRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElementException("Usuario no encontrado"));
-
-        // Validar que la clase exista
         ClassEntity classEntity = classRepository.findById(request.getClassId())
                 .orElseThrow(() -> new NoSuchElementException("Clase no encontrada"));
 
-        // Validar que el horario esté dentro del horario de clase
+        // Validar horario
         if (request.getStartTime().isBefore(classEntity.getStartTime()) ||
                 request.getEndTime().isAfter(classEntity.getEndTime())) {
             throw new IllegalArgumentException("El horario de la reserva debe estar dentro del horario de la clase");
         }
 
-        // Si la reserva es RECURRENTE
+        List<Booking> bookings = new ArrayList<>();
+
         if (Booking.BookingType.valueOf(request.getBookingType()) == Booking.BookingType.RECURRENTE) {
-            java.time.LocalDate current = request.getBookingDate();
-            java.time.LocalDate end = request.getRecurrenceEndDate();
-            java.util.List<Booking> bookings = new java.util.ArrayList<>();
+            // Crear una reserva por semana, para el mismo día, entre bookingDate y recurrenceEndDate
+            LocalDate current = request.getBookingDate();
+            LocalDate end = request.getRecurrenceEndDate();
             while (!current.isAfter(end)) {
-                if (!isSlotAvailable(classEntity, current, request.getStartTime(), request.getEndTime())) {
-                    throw new IllegalArgumentException("No hay cupo disponible para la clase en la fecha " + current);
-                }
                 Booking booking = new Booking();
                 booking.setUser(user);
                 booking.setClassEntity(classEntity);
@@ -54,33 +52,25 @@ public class BookingService {
                 booking.setStartTime(request.getStartTime());
                 booking.setEndTime(request.getEndTime());
                 booking.setType(Booking.BookingType.RECURRENTE);
-                booking.setNotes(request.getNotes());
+                booking.setRecurrenceEndDate(end);
+                booking.setRecurrencePattern("WEEKLY");
                 booking.setStatus(Booking.BookingStatus.PENDING);
-                bookings.add(booking);
+                bookings.add(bookingRepository.save(booking));
                 current = current.plusWeeks(1);
             }
-            bookingRepository.saveAll(bookings);
-            return bookings.get(0); // O puedes devolver la lista si prefieres
+        } else {
+            // PUNTUAL
+            Booking booking = new Booking();
+            booking.setUser(user);
+            booking.setClassEntity(classEntity);
+            booking.setBookingDate(request.getBookingDate());
+            booking.setStartTime(request.getStartTime());
+            booking.setEndTime(request.getEndTime());
+            booking.setType(Booking.BookingType.PUNTUAL);
+            booking.setStatus(Booking.BookingStatus.PENDING);
+            bookings.add(bookingRepository.save(booking));
         }
-
-        // Validar cupo y solapamiento para reserva puntual
-        if (!isSlotAvailable(classEntity, request.getBookingDate(), request.getStartTime(), request.getEndTime())) {
-            throw new IllegalArgumentException("No hay cupo disponible para la clase en el horario solicitado");
-        }
-
-        // Crear la reserva puntual
-        Booking booking = new Booking();
-        booking.setUser(user);
-        booking.setClassEntity(classEntity);
-        booking.setBookingDate(request.getBookingDate());
-        booking.setStartTime(request.getStartTime());
-        booking.setEndTime(request.getEndTime());
-        booking.setType(Booking.BookingType.valueOf(request.getBookingType()));
-        booking.setNotes(request.getNotes());
-        booking.setStatus(Booking.BookingStatus.PENDING);
-
-        // Guardar la reserva
-        return bookingRepository.save(booking);
+        return bookings;
     }
 
     private boolean isSlotAvailable(ClassEntity classEntity, java.time.LocalDate date, java.time.LocalTime start,
