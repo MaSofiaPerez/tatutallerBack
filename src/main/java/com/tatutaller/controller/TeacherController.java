@@ -22,7 +22,13 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/teacher")
-@CrossOrigin(origins = { "http://localhost:5173", "http://localhost:3000" })
+@CrossOrigin(origins = {
+    "http://localhost:5173",
+    "https://www.tatutaller.com.uy",
+    "https://tatutaller.com.uy",
+    "https://app.tatutaller.com.uy",
+    "https://*.tatutaller.com.uy"
+})
 public class TeacherController {
 
     @Autowired
